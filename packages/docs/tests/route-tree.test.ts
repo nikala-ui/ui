@@ -72,19 +72,18 @@ describe("route-tree", () => {
     test("structures pages into root items and categories", () => {
       const tree = buildSidebarTree(mockPages);
 
-      expect(tree).toHaveLength(3);
-      expect(tree[0]).toEqual({ title: "Introduction", href: "/", badge: undefined, icon: undefined });
+      expect(tree).toHaveLength(2);
 
-      expect(tree[1].title).toBe("Getting Started");
+      expect(tree[0].title).toBe("Getting Started");
+      expect(tree[0].items).toHaveLength(2);
+      expect(tree[0].items?.[0].title).toBe("Installation");
+      expect(tree[0].items?.[1].title).toBe("Configuration");
+
+      expect(tree[1].title).toBe("Components");
+      expect(tree[1].href).toBe("/components");
       expect(tree[1].items).toHaveLength(2);
-      expect(tree[1].items?.[0].title).toBe("Installation");
-      expect(tree[1].items?.[1].title).toBe("Configuration");
-
-      expect(tree[2].title).toBe("Components");
-      expect(tree[2].href).toBe("/components");
-      expect(tree[2].items).toHaveLength(2);
-      expect(tree[2].items?.[0].title).toBe("Button");
-      expect(tree[2].items?.[1].title).toBe("Dialog");
+      expect(tree[1].items?.[0].title).toBe("Button");
+      expect(tree[1].items?.[1].title).toBe("Dialog");
     });
   });
 
@@ -93,9 +92,8 @@ describe("route-tree", () => {
       const tree = buildSidebarTree(mockPages);
       const flat = flattenSidebarItems(tree);
 
-      expect(flat).toHaveLength(6);
+      expect(flat).toHaveLength(5);
       expect(flat.map((i) => i.href)).toEqual([
-        "/",
         "/getting-started/installation",
         "/getting-started/configuration",
         "/components",
@@ -109,7 +107,7 @@ describe("route-tree", () => {
     test("computes previous and next links for middle item", () => {
       const pagination = buildPagination(mockPages, "/getting-started/installation");
 
-      expect(pagination.prev).toEqual({ title: "Introduction", href: "/" });
+      expect(pagination.prev).toBeUndefined();
       expect(pagination.next).toEqual({
         title: "Configuration",
         href: "/getting-started/configuration",
@@ -119,10 +117,7 @@ describe("route-tree", () => {
     test("handles first and last items without overflow", () => {
       const firstPage = buildPagination(mockPages, "/");
       expect(firstPage.prev).toBeUndefined();
-      expect(firstPage.next).toEqual({
-        title: "Installation",
-        href: "/getting-started/installation",
-      });
+      expect(firstPage.next).toBeUndefined();
 
       const lastPage = buildPagination(mockPages, "/components/dialog");
       expect(lastPage.prev).toEqual({ title: "Button", href: "/components/button" });

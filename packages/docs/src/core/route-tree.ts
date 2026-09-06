@@ -32,7 +32,8 @@ export function buildSidebarTree(pages: PageData[], directories: string[] = []):
 
   for (const page of pages) {
     if (page.url === "/") {
-      rootPages.push(page);
+      // The home page is the site entry point, not a documentation item.
+      // Keep it out of the sidebar so it is not duplicated as "Introduction".
       continue;
     }
 
@@ -59,10 +60,8 @@ export function buildSidebarTree(pages: PageData[], directories: string[] = []):
     }
   }
 
-  // Sort root pages: "/" always first, then by order, then title
+  // Sort root pages by order, then title.
   rootPages.sort((a, b) => {
-    if (a.url === "/") return -1;
-    if (b.url === "/") return 1;
     const orderA = a.frontmatter.order ?? 9999;
     const orderB = b.frontmatter.order ?? 9999;
     if (orderA !== orderB) return orderA - orderB;
@@ -166,7 +165,8 @@ export function buildPagination(
 ): { prev?: { title: string; href: string }; next?: { title: string; href: string } } {
   const currentPage = pages.find((p) => p.url === currentUrl);
 
-  const sidebar = buildSidebarTree(pages);
+  const navigationPages = pages.filter((page) => page.url !== "/");
+  const sidebar = buildSidebarTree(navigationPages);
   const flattened = flattenSidebarItems(sidebar);
   const currentIndex = flattened.findIndex((item) => item.href === currentUrl);
 
