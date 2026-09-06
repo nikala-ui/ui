@@ -4,16 +4,81 @@ import fs from "fs-extra";
 import matter from "gray-matter";
 import type { Frontmatter, PageData, TocItem } from "../types.js";
 
+function isWhitespace(character: string): boolean {
+  if (!character) return false;
+  const code = character.charCodeAt(0);
+  return code === 9 || code === 10 || code === 11 || code === 12 || code === 13 || code === 32;
+}
+
+function isSlugCharacter(character: string): boolean {
+  if (!character) return false;
+  const code = character.charCodeAt(0);
+  return (code >= 48 && code <= 57) || (code >= 65 && code <= 90) || (code >= 97 && code <= 122) || character === "_" || character === "-";
+}
+
 export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .trim()
-    // Keep the same ordering as rehype-slug/github-slugger: whitespace is
-    // converted before punctuation is removed. This preserves IDs such as
-    // `a--b` for headings containing `&` or `/`.
-    .replace(/\s/g, "-")
-    .replace(/[^\w-]/g, "")
-    .replace(/^-+|-+$/g, "");
+  let result = "";
+  for (const character of text.toLowerCase()) {
+    if (isWhitespace(character)) {
+      result += "-";
+    } else if (isSlugCharacter(character)) {
+      result += character;
+    }
+  }
+
+  let start = 0;
+  let end = result.length;
+  while (start < end && result[start] === "-") start += 1;
+  while (end > start && result[end - 1] === "-") end -= 1;
+  return result.slice(start, end);
+}
+
+function parseHeading(line: string, minLevel: number, maxLevel: number): { level: number; text: string } | undefined {
+  const trimmed = line.trim();
+  let level = 0;
+  while (level < trimmed.length && trimmed[level] === "#") level += 1;
+  if (level < minLevel || level > maxLevel || !isWhitespace(trimmed[level])) return undefined;
+
+  let start = level;
+  while (start < trimmed.length && isWhitespace(trimmed[start])) start += 1;
+  if (start === trimmed.length) return undefined;
+  return { level, text: trimmed.slice(start).trim() };
+}
+
+function stripMarkdownLinks(text: string): string {
+  let result = "";
+  let index = 0;
+  while (index < text.length) {
+    if (text[index] !== "[") {
+      result += text[index++];
+      continue;
+    }
+
+    const labelEnd = text.indexOf("]", index + 1);
+    const linkStart = labelEnd + 1;
+    if (labelEnd < 0 || text[linkStart] !== "(") {
+      result += text[index++];
+      continue;
+    }
+
+    const linkEnd = text.indexOf(")", linkStart + 1);
+    if (linkEnd < 0) {
+      result += text[index++];
+      continue;
+    }
+
+    result += text.slice(index + 1, labelEnd);
+    index = linkEnd + 1;
+  }
+  return result;
+}
+
+function stripMarkdownDecorators(text: string): string {
+  let result = "";
+  for (const character of text) {
+    if (character !== "*" && character !== "_" && character !== "`") result += character;
+  }
+  return result;
 }
 
 export function extractToc(content: string): TocItem[] {
@@ -33,14 +98,13 @@ export function extractToc(content: string): TocItem[] {
     if (inCodeBlock) continue;
 
     // Match H2 and H3 headings: ## Title or ### Title
-    const match = trimmed.match(/^(#{2,3})\s+(.+)$/);
+    const match = parseHeading(trimmed, 2, 3);
     if (match) {
-      const level = match[1].length;
-      let text = match[2].trim();
+      const level = match.level;
+      let text = match.text;
 
       // Clean inline markdown links, bold, code wrappers
-      text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
-      text = text.replace(/[*_`]/g, "");
+      text = stripMarkdownDecorators(stripMarkdownLinks(text));
 
       const baseId = slugify(text);
       if (baseId) {
@@ -71,9 +135,9 @@ export function extractTitle(content: string, fallback: string): string {
     }
     if (inCodeBlock) continue;
 
-    const match = trimmed.match(/^#\s+(.+)$/);
+    const match = parseHeading(trimmed, 1, 1);
     if (match) {
-      return match[1].trim().replace(/[*_`]/g, "");
+      return stripMarkdownDecorators(match.text);
     }
   }
 

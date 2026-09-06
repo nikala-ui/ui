@@ -189,14 +189,53 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
+function stripHtmlTags(value: string): string {
+  let result = "";
+  let index = 0;
+  while (index < value.length) {
+    if (value[index] !== "<") {
+      result += value[index++];
+      continue;
+    }
+
+    let quote = "";
+    let end = index + 1;
+    for (; end < value.length; end += 1) {
+      const character = value[end];
+      if ((character === '"' || character === "'") && !quote) quote = character;
+      else if (character === quote) quote = "";
+      else if (character === ">" && !quote) break;
+    }
+
+    if (end >= value.length) {
+      result += value[index++];
+    } else {
+      index = end + 1;
+    }
+  }
+  return result;
+}
+
+function safeHref(value: string): string {
+  const href = value.trim();
+  if (!href) return "#";
+
+  try {
+    const protocol = new URL(href, "https://nikala-docs.invalid").protocol;
+    if (protocol !== "http:" && protocol !== "https:" && protocol !== "mailto:") return "#";
+  } catch {
+    return "#";
+  }
+
+  return href;
+}
+
 function renderInlineMarkdown(value: string): string {
-  const withoutComponents = value
-    .replace(/<\/?[A-Z][A-Za-z0-9.]*(?:\s[^>]*)?>/g, "")
-    .replace(/<\/?[a-z][^>]*>/g, "");
+  const withoutComponents = stripHtmlTags(value);
   return escapeHtml(withoutComponents)
     .replace(/`([^`]+)`/g, "<code>$1</code>")
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_match, label: string, href: string) => `<a href="${escapeHtml(safeHref(href))}">${label}</a>`);
 }
 
 async function renderStaticPage(filePath: string): Promise<string> {

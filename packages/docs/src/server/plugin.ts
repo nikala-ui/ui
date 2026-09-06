@@ -164,14 +164,15 @@ export default { pages, tree };
 
       if (id === RESOLVED_ROUTES_ID) {
         cachedPages = await scanContent(docsDir);
-        const routeEntries = cachedPages.map((page) => {
-          // Normalize file path for ESM import
-          const escapedPath = JSON.stringify(page.filePath);
-          const escapedUrl = JSON.stringify(page.url);
-          return `  ${escapedUrl}: () => import(${escapedPath})`;
-        });
+        const imports = cachedPages.map((page, index) =>
+          `import * as pageModule${index} from ${JSON.stringify(page.filePath)};`
+        );
+        const routeEntries = cachedPages.map((page, index) =>
+          `  ${JSON.stringify(page.url)}: () => Promise.resolve(pageModule${index})`
+        );
 
         return `
+${imports.join("\n")}
 export const routes = {
 ${routeEntries.join(",\n")}
 };
