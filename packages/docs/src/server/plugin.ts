@@ -153,12 +153,14 @@ export function nikalaDocsPlugin(options: NikalaDocsPluginOptions = {}): Plugin 
   let docsDir = options.docsDir ? path.resolve(rootDir, options.docsDir) : path.resolve(rootDir, "docs");
   let resolvedConfig: DocsConfig = options.config || { title: "Nikala Docs" };
   let cachedPages: PageData[] = [];
+  let isSsrBuild = false;
 
   return {
     name: "vite-plugin-nikala-docs",
     enforce: "pre",
 
     async configResolved(viteConfig) {
+      isSsrBuild = Boolean(viteConfig.build.ssr);
       // Keep Vite's internal root separate from the consuming project's root.
       // Otherwise a relative contentDir could resolve under packages/docs.
       rootDir = path.resolve(options.configRoot || process.cwd());
@@ -188,7 +190,7 @@ export function nikalaDocsPlugin(options: NikalaDocsPluginOptions = {}): Plugin 
         if (importer && (importer.includes("/mdx/") || importer.includes("\\mdx\\"))) {
           return null;
         }
-        return RESOLVED_SHIKI_ID;
+        return isSsrBuild ? RESOLVED_SHIKI_ID : null;
       }
       if (id === VIRTUAL_CONFIG_ID) return RESOLVED_CONFIG_ID;
       if (id === VIRTUAL_TREE_ID) return RESOLVED_TREE_ID;
