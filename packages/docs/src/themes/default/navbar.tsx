@@ -10,7 +10,6 @@ import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Kbd } from "@/components/ui/kbd";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { useSidebar } from "@/components/ui/sidebar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Logo } from "@/components/ui/logo";
 import { Search } from "lucide-solid";
@@ -23,7 +22,6 @@ export const DocsNavbar: Component<DocsNavbarProps> = (props) => {
   const logoText = () => local.config.logo?.text || title();
   const logoHref = () => local.config.logo?.href || "/";
   const repoUrl = () => local.config.repository?.url;
-  const sidebar = useSidebar();
 
   return (
     <Navbar
@@ -33,15 +31,10 @@ export const DocsNavbar: Component<DocsNavbarProps> = (props) => {
       class={local.class}
       {...rest}
     >
-      <NavbarContainer class="h-14 px-4 sm:px-6" >
+      <NavbarContainer class="h-14 md:h-14 px-4 sm:px-6">
         <NavbarContent justify="start" class="gap-3">
           <Show when={local.showSidebarTrigger !== false}>
-            <SidebarTrigger
-              aria-label="Toggle documentation sidebar"
-              onClick={() => {
-                if (sidebar.isMobile()) sidebar.setOpenMobile(!sidebar.openMobile());
-              }}
-            />
+            <SidebarTrigger aria-label="Toggle documentation sidebar" />
           </Show>
           <Show when={local.showBrand !== false}>
             <NavbarBrand href={logoHref()} class="text-base font-bold tracking-tight">

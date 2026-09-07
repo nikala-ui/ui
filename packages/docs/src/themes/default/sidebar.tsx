@@ -51,22 +51,26 @@ export const DocsSidebar: Component<DocsSidebarProps> = (props) => {
         />
       </Show>
       <Show when={!sidebar.isMobile() || sidebar.openMobile()}>
-        <Sidebar
-          ref={setSidebarElement}
-          collapsible={sidebar.isMobile() ? "none" : "icon"}
-          class={cn(
-            "sticky top-0 z-30 h-screen shrink-0 rounded-none border-y-0 border-l-0 border-r border-border bg-card shadow-sm",
-            "overflow-hidden max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-[min(17rem,calc(100vw-1rem))] max-md:shadow-xl",
-            local.class
-          )}
-          {...rest}
-        >
+        <div class={cn(
+          "w-0 md:shrink-0",
+          sidebar.open() ? "md:w-[var(--sidebar-width)]" : "md:w-[var(--sidebar-width-icon)]"
+        )}>
+          <Sidebar
+            ref={setSidebarElement}
+            collapsible={sidebar.isMobile() ? "none" : "icon"}
+            class={cn(
+              "top-0 self-start z-30 h-screen shrink-0 rounded-none border-y-0 border-l-0 border-r border-border bg-card shadow-sm md:fixed md:inset-y-0 md:left-0",
+              "overflow-hidden max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-[min(17rem,calc(100vw-1rem))] max-md:shadow-xl",
+              local.class
+            )}
+            {...rest}
+          >
       <Show when={local.showHeader !== false}>
-        <SidebarHeader class="p-3">
+        <SidebarHeader class="h-14 box-border p-3 group-data-[collapsible=icon]:p-2">
           <a
             href={local.logo?.href || "/"}
             data-sidebar="menu-button"
-            class={cn(sidebarMenuButtonVariants({ variant: "default", size: "lg" }), "w-full justify-between")}
+            class={cn(sidebarMenuButtonVariants({ variant: "default", size: "default" }), "h-8 w-full justify-between group-data-[collapsible=icon]:h-10")}
           >
             <div class="flex items-center gap-2.5 overflow-hidden">
               <Show when={local.logo?.image} fallback={<Logo class="size-7" />}>
@@ -115,7 +119,8 @@ export const DocsSidebar: Component<DocsSidebarProps> = (props) => {
           </SidebarMenuButton>
         </SidebarFooter>
       </Show>
-        </Sidebar>
+          </Sidebar>
+        </div>
       </Show>
     </>
   );

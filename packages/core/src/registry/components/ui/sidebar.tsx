@@ -244,17 +244,16 @@ export interface SidebarTriggerProps extends JSX.ButtonHTMLAttributes<HTMLButton
 
 export const SidebarTrigger: Component<SidebarTriggerProps> = (props) => {
   const [local, rest] = splitProps(props, ["class", "onClick"]);
-  const { toggleSidebar, side } = useSidebar();
+  const { toggleSidebar, side, isMobile, openMobile, setOpenMobile } = useSidebar();
 
   return (
     <button
       type="button"
       aria-label="Toggle Sidebar"
       onClick={(e) => {
-        if (typeof local.onClick === "function") {
-          local.onClick(e);
-        }
-        toggleSidebar();
+        if (typeof local.onClick === "function") local.onClick(e);
+        if (isMobile()) setOpenMobile(!openMobile());
+        else toggleSidebar();
       }}
       class={cn(
         "inline-flex size-7 items-center justify-center rounded-md border border-border/60 bg-background text-foreground hover:bg-muted focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring cursor-pointer transition-colors shadow-2xs",
