@@ -28,6 +28,7 @@ export interface DocsTableOfContentsProps {
   items: TocItem[];
   title?: string;
   class?: string;
+  onActiveChange?: (id: string) => void;
 }
 
 export interface DocsBreadcrumbsProps {
