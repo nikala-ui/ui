@@ -1,5 +1,5 @@
 // packages/docs/src/themes/default/sidebar.tsx
-import { Show, splitProps, type Component } from "solid-js";
+import { createSignal, onCleanup, onMount, Show, splitProps, type Component } from "solid-js";
 import { Sidebar } from "@/components/ui/sidebar";
 import { SidebarHeader } from "@/components/ui/sidebar";
 import { SidebarContent } from "@/components/ui/sidebar";
@@ -9,6 +9,8 @@ import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { sidebarMenuButtonVariants } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Logo } from "@/components/ui/logo";
+import { createFocusTrap } from "@/hooks/create-focus-trap";
+import { createLockScroll } from "@/hooks/create-lock-scroll";
 import { cn } from "@/lib/cn";
 import type { DocsSidebarProps } from "../types.js";
 import { SidebarTree } from "./navigation/sidebar-tree.jsx";
@@ -17,6 +19,26 @@ export const DocsSidebar: Component<DocsSidebarProps> = (props) => {
   const [local, rest] = splitProps(props, ["tree", "currentUrl", "title", "logo", "headerSubtitle", "footerText", "showHeader", "showFooter", "class"]);
   const brandText = () => local.logo?.text || local.title || "Nikala Docs";
   const sidebar = useSidebar();
+  const [sidebarElement, setSidebarElement] = createSignal<HTMLDivElement>();
+
+  createFocusTrap(sidebarElement, {
+    enabled: () => sidebar.isMobile() && sidebar.openMobile(),
+  });
+  createLockScroll({
+    enabled: () => sidebar.isMobile() && sidebar.openMobile(),
+  });
+
+  onMount(() => {
+    if (typeof window === "undefined") return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && sidebar.isMobile() && sidebar.openMobile()) {
+        event.preventDefault();
+        sidebar.setOpenMobile(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    onCleanup(() => window.removeEventListener("keydown", handleKeyDown));
+  });
 
   return (
     <>
@@ -30,6 +52,7 @@ export const DocsSidebar: Component<DocsSidebarProps> = (props) => {
       </Show>
       <Show when={!sidebar.isMobile() || sidebar.openMobile()}>
         <Sidebar
+          ref={setSidebarElement}
           collapsible={sidebar.isMobile() ? "none" : "icon"}
           class={cn(
             "sticky top-0 z-30 h-screen shrink-0 rounded-none border-y-0 border-l-0 border-r border-border bg-card shadow-sm",

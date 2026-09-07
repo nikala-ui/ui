@@ -107,6 +107,36 @@ function createLocalBarrelPlugin(
   };
 }
 
+function resolveSourceFile(directory: string, relativePath: string): string | undefined {
+  const base = path.join(directory, relativePath);
+  const candidates = [
+    base,
+    ...[".ts", ".tsx", ".js", ".jsx"].map((extension) => base + extension),
+    ...["index.ts", "index.tsx", "index.js", "index.jsx"].map((entry) => path.join(base, entry)),
+  ];
+  return candidates.find((file) => fs.existsSync(file));
+}
+
+function createLocalHooksFallbackPlugin(localHooks: string, bundledHooks: string) {
+  return {
+    name: "nikala-docs-local-hooks-fallback",
+    enforce: "pre" as const,
+    resolveId(source: string) {
+      if (source.startsWith("@/hooks/")) {
+        const relativePath = source.slice("@/hooks/".length);
+        return resolveSourceFile(localHooks, relativePath) || resolveSourceFile(bundledHooks, relativePath);
+      }
+
+      const localPrefix = `${localHooks}${path.sep}`;
+      if (source.startsWith(localPrefix) && !resolveSourceFile(localHooks, source.slice(localPrefix.length))) {
+        return resolveSourceFile(bundledHooks, source.slice(localPrefix.length));
+      }
+
+      return undefined;
+    },
+  };
+}
+
 function getSharedConfig(options: DocsServerOptions, isDev = false, isSSR = false): InlineConfig {
   const root = options.root ? path.resolve(process.cwd(), options.root) : process.cwd();
   const clientDir = getClientDir();
@@ -163,6 +193,7 @@ function getSharedConfig(options: DocsServerOptions, isDev = false, isSSR = fals
       exclude: ["shiki"],
     },
     plugins: [
+      createLocalHooksFallbackPlugin(localHooks, hooksSrc),
       createLocalBarrelPlugin(componentsSrc, hooksSource, libSource, providersSource),
       nikalaDocsPlugin({
         docsDir: options.docsDir ? path.resolve(root, options.docsDir) : undefined,
