@@ -1,9 +1,12 @@
 @layer base {
   html,
-  body,
+  body {
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
   #root {
     max-width: 100%;
-    overflow-x: hidden;
   }
 
   *,
