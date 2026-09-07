@@ -1,12 +1,11 @@
 // packages/docs/src/mdx/highlighter.ts
 import {
-  createHighlighter,
-  bundledLanguages,
-  bundledThemes,
   type BundledLanguage,
   type BundledTheme,
   type Highlighter,
 } from "shiki";
+import { createBundledHighlighter } from "shiki/core";
+import { createJavaScriptRegexEngine } from "shiki/engine/javascript";
 import type { ShikiConfig } from "../types.js";
 
 let highlighterPromise: Promise<Highlighter> | null = null;
@@ -24,21 +23,51 @@ const DEFAULT_BASE_LANGS: BundledLanguage[] = [
   "markdown",
   "mdx",
   "rust",
-  "c",
-  "cpp",
   "python",
-  "go",
   "yaml",
   "toml",
   "sql",
-  "mermaid",
   "diff",
-  "dockerfile",
-  "zig",
 ];
+
+const languageLoaders = {
+  typescript: () => import("@shikijs/langs/typescript"),
+  javascript: () => import("@shikijs/langs/javascript"),
+  tsx: () => import("@shikijs/langs/tsx"),
+  jsx: () => import("@shikijs/langs/jsx"),
+  bash: () => import("@shikijs/langs/shellscript"),
+  json: () => import("@shikijs/langs/json"),
+  css: () => import("@shikijs/langs/css"),
+  html: () => import("@shikijs/langs/html"),
+  markdown: () => import("@shikijs/langs/markdown"),
+  mdx: () => import("@shikijs/langs/mdx"),
+  rust: () => import("@shikijs/langs/rust"),
+  python: () => import("@shikijs/langs/python"),
+  yaml: () => import("@shikijs/langs/yaml"),
+  toml: () => import("@shikijs/langs/toml"),
+  sql: () => import("@shikijs/langs/sql"),
+  diff: () => import("@shikijs/langs/diff"),
+  c: () => import("@shikijs/langs/c"),
+  cpp: () => import("@shikijs/langs/cpp"),
+  go: () => import("@shikijs/langs/go"),
+  mermaid: () => import("@shikijs/langs/mermaid"),
+  dockerfile: () => import("@shikijs/langs/docker"),
+  zig: () => import("@shikijs/langs/zig"),
+} as const;
 
 const DEFAULT_LIGHT_THEME: BundledTheme = "github-light";
 const DEFAULT_DARK_THEME: BundledTheme = "github-dark";
+
+const themeLoaders = {
+  "github-light": () => import("@shikijs/themes/github-light"),
+  "github-dark": () => import("@shikijs/themes/github-dark"),
+} as const;
+
+const createDocsHighlighter = createBundledHighlighter({
+  langs: languageLoaders,
+  themes: themeLoaders,
+  engine: () => createJavaScriptRegexEngine(),
+});
 
 export function configureDocsHighlighter(config: ShikiConfig): void {
   activeShikiConfig = config;
@@ -53,10 +82,10 @@ export async function getDocsHighlighter(config?: ShikiConfig): Promise<Highligh
     const darkTheme = (currentConfig?.themes?.dark as BundledTheme) || DEFAULT_DARK_THEME;
     const initialLangs = (currentConfig?.langs as BundledLanguage[]) || DEFAULT_BASE_LANGS;
 
-    highlighterPromise = createHighlighter({
+    highlighterPromise = createDocsHighlighter({
       themes: [lightTheme, darkTheme],
       langs: initialLangs,
-    });
+    }) as Promise<Highlighter>;
   }
 
   return highlighterPromise;
@@ -79,10 +108,9 @@ export async function ensureLanguage(highlighter: Highlighter, rawLang: string):
     return normalized;
   }
 
-  // Check if it's available in Shiki's bundled languages
-  if (normalized in bundledLanguages) {
+  if (normalized in languageLoaders) {
     try {
-      await highlighter.loadLanguage(normalized as BundledLanguage);
+      await highlighter.loadLanguage(normalized as keyof typeof languageLoaders);
       return normalized;
     } catch (err) {
       console.warn(`[nikala-docs] Failed to dynamically load Shiki language "${normalized}":`, err);
@@ -101,9 +129,9 @@ export async function ensureTheme(highlighter: Highlighter, themeName: string): 
     return themeName;
   }
 
-  if (themeName in bundledThemes) {
+  if (themeName in themeLoaders) {
     try {
-      await highlighter.loadTheme(themeName as BundledTheme);
+      await highlighter.loadTheme(themeName as keyof typeof themeLoaders);
       return themeName;
     } catch (err) {
       console.warn(`[nikala-docs] Failed to dynamically load Shiki theme "${themeName}":`, err);
