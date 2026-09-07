@@ -51,6 +51,14 @@ function findConfigFile(rootDir: string): string | undefined {
     .find((file) => fs.existsSync(file));
 }
 
+function escapeHtmlAttribute(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function getTailwindSourceDirectives(rootDir: string, docsDir: string): string {
   const sources: string[] = [];
   const bundledCoreSource = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../vendor/core-src");
@@ -183,6 +191,14 @@ export function nikalaDocsPlugin(options: NikalaDocsPluginOptions = {}): Plugin 
         docsDir = path.resolve(rootDir, options.docsDir);
       }
 
+    },
+
+    transformIndexHtml(html) {
+      const favicon = resolvedConfig.favicon || "/favicon.ico";
+      return html.replace(
+        /<link rel="icon" href="[^"]*"\s*\/>/i,
+        `<link rel="icon" href="${escapeHtmlAttribute(favicon)}" />`,
+      );
     },
 
     resolveId(id, importer) {

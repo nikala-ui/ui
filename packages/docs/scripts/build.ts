@@ -7,6 +7,7 @@ import pc from "picocolors";
 const rootDir = path.resolve(import.meta.dirname, "..");
 const distDir = path.resolve(rootDir, "dist");
 const srcClientDir = path.resolve(rootDir, "src/client");
+const srcClientPublicDir = path.join(srcClientDir, "public");
 const distClientDir = path.resolve(distDir, "client");
 const cliDistFile = path.resolve(distDir, "cli/index.js");
 const workspaceRoot = path.resolve(rootDir, "../..");
@@ -53,6 +54,12 @@ try {
   if (fs.existsSync(baseCssSrc)) {
     fs.copyFileSync(baseCssSrc, baseCssDist);
     console.log("  " + pc.green("✓") + " Synced " + pc.dim("dist/client/base.css"));
+  }
+
+  const publicDir = path.join(distClientDir, "public");
+  if (fs.existsSync(srcClientPublicDir)) {
+    fs.copySync(srcClientPublicDir, publicDir);
+    console.log(`  ${pc.green("✓")} Synced ${pc.dim("dist/client/public")}`);
   }
 } catch (err: any) {
   console.error(pc.red(`✗ Failed to sync client assets: ${err.message}`));

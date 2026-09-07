@@ -7,6 +7,7 @@ import type { DocsConfig } from "./types.js";
 export const DEFAULT_DOCS_CONFIG: Required<Pick<DocsConfig, "title" | "description" | "contentDir" | "sidebar">> & DocsConfig = {
   title: "Nikala Docs",
   description: "Documentation built with Nikala UI",
+  favicon: "/favicon.ico",
   contentDir: "docs",
   sidebar: "auto",
   navigation: {

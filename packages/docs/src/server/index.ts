@@ -140,6 +140,7 @@ function createLocalHooksFallbackPlugin(localHooks: string, bundledHooks: string
 function getSharedConfig(options: DocsServerOptions, isDev = false, isSSR = false): InlineConfig {
   const root = options.root ? path.resolve(process.cwd(), options.root) : process.cwd();
   const clientDir = getClientDir();
+  const publicDir = path.join(root, "public");
   const solidJsDir = getSolidJsDir();
   const coreSrc = getCoreSrcDir();
   const hooksSrc = getHooksSrcDir();
@@ -184,6 +185,7 @@ function getSharedConfig(options: DocsServerOptions, isDev = false, isSSR = fals
 
   return {
     root: clientDir,
+    publicDir: fs.existsSync(publicDir) ? publicDir : path.join(clientDir, "public"),
     resolve: {
       alias: aliases,
       dedupe: ["solid-js", "solid-js/web", "solid-js/store"],

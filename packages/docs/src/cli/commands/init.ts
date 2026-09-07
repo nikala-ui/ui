@@ -199,11 +199,25 @@ async function copyCustomTheme(root: string): Promise<void> {
   }
 }
 
+async function copyDefaultAssets(root: string): Promise<void> {
+  const commandDir = path.dirname(fileURLToPath(import.meta.url));
+  const sourceCandidates = [
+    path.resolve(commandDir, "../../client/public/favicon.ico"),
+    path.resolve(commandDir, "../../../src/client/public/favicon.ico"),
+  ];
+  const source = sourceCandidates.find((candidate) => fs.existsSync(candidate));
+  if (!source) return;
+
+  const destination = path.join(root, "public/favicon.ico");
+  if (!(await fs.pathExists(destination))) await fs.copy(source, destination);
+}
+
 async function writeProjectFiles(root: string, registryDependencies: string[]): Promise<void> {
   const docsConfigPath = path.join(root, "docs.config.ts");
   if (!(await fs.pathExists(docsConfigPath))) await fs.outputFile(docsConfigPath, `export default {
   title: "My Project Docs",
   description: "Documentation built with Nikala Docs and SolidJS",
+  favicon: "/favicon.ico",
   contentDir: "docs",
   css: "src/index.css",
   home: { layout: "landing", showSidebar: false, showNavbar: true, showBreadcrumbs: false, showToc: false, showPager: false },
@@ -296,6 +310,7 @@ Your Nikala UI components and reactive hooks are owned locally in **src/componen
 </Callout>
   `, "utf-8");
   await copyCustomTheme(root);
+  await copyDefaultAssets(root);
   const copied = await copyRegistrySource(root);
   await writeProjectFiles(root, copied.dependencies);
   installProjectDependencies(root);

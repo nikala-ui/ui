@@ -145,7 +145,7 @@ export default {
 
 Available configuration areas include:
 
-- `title`, `description`, and `siteUrl` for document metadata.
+- `title`, `description`, `siteUrl`, and `favicon` for document metadata and browser branding.
 - `contentDir` for the MDX content root.
 - `css` for the local Tailwind CSS entrypoint and semantic design tokens.
 - `logo` for text, image, and logo link configuration.

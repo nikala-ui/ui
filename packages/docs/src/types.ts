@@ -88,6 +88,8 @@ export interface DocsConfig {
   title?: string;
   description?: string;
   siteUrl?: string;
+  /** Favicon URL or path served by the consuming documentation site. */
+  favicon?: string;
   contentDir?: string;
   /** CSS entrypoint owned by the consuming documentation project. */
   css?: string;
