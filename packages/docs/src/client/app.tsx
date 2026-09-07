@@ -18,18 +18,22 @@ export type { AppProps } from "./app-types.js";
 export const App: Component<AppProps> = (props) => {
   const config = rawConfig || { title: "Nikala Docs" };
 
-  if (typeof document !== "undefined") {
-    createEffect(() => {
-      document.title = config.title || "Documentation";
-    });
-  }
-
   const router = createDocsRouter({
     initialPath: props.initialPath,
     initialPageModule: props.initialPageModule,
     pages: allPages,
     loaders: pageRoutes,
   });
+
+  if (typeof document !== "undefined") {
+    createEffect(() => {
+      const siteTitle = config.title || "Documentation";
+      const pageTitle = router.currentPage()?.title;
+      document.title = pageTitle && pageTitle !== siteTitle
+        ? `${pageTitle} - ${siteTitle}`
+        : siteTitle;
+    });
+  }
   const navigation = createPageNavigation(router.currentPage, allPages, sidebarTree);
 
   return (

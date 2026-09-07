@@ -428,7 +428,7 @@ async function prerenderDocs(options: DocsServerOptions, outDir: string, templat
         }
       }
 
-      const title = escapeHtml(page.title === "Overview" ? (config.title || page.title) : `${page.title} | ${config.title || "Documentation"}`);
+      const title = escapeHtml(`${page.title} - ${config.title || "Documentation"}`);
       const description = escapeHtml(page.description || config.description || "");
       const canonical = config.siteUrl
         ? `<link rel="canonical" href="${escapeHtml(`${config.siteUrl.replace(/\/$/, "")}${page.url === "/" ? "/" : page.url}`)}">`
@@ -586,13 +586,13 @@ export async function createDocsRequestHandler(options: DocsServerOptions = {}):
     if (renderer) {
       try {
         const rendered = await renderWithTimeout(renderer, page.url);
-        const title = escapeHtml(page.title === "Overview" ? (config.title || page.title) : `${page.title} | ${config.title || "Documentation"}`);
+      const title = escapeHtml(`${page.title} - ${config.title || "Documentation"}`);
         const description = escapeHtml(page.description || config.description || "");
         const canonical = config.siteUrl
           ? `<link rel="canonical" href="${escapeHtml(`${config.siteUrl.replace(/\/$/, "")}${page.url === "/" ? "/" : page.url}`)}">`
           : "";
         const html = addHydrationScript(template, renderer.hydrationScript)
-          .replace(/<title>[^<]*<\/title>/i, `<title>${title}</title>${description ? `<meta name="description" content="${description}">` : ""}${canonical}`)
+        .replace(/<title>[^<]*<\/title>/i, `<title>${title}</title>${description ? `<meta name="description" content="${description}">` : ""}${canonical}`)
           .replace('<div id="root"></div>', `<div id="root" data-prerendered>${rendered}</div>`);
         return new Response(html, { headers: { "content-type": "text/html; charset=utf-8" } });
       } catch {
