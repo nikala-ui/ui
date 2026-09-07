@@ -44,7 +44,28 @@ async function getShikiHighlighter() {
   if (typeof window === "undefined") return null;
   if (!shikiHighlighterPromise) {
     try {
-      const { createHighlighter } = await import("shiki");
+      const [{ createBundledHighlighter }, { createJavaScriptRegexEngine }] = await Promise.all([
+        import("shiki/core"),
+        import("shiki/engine/javascript"),
+      ]);
+      const createHighlighter = createBundledHighlighter({
+        langs: {
+          typescript: () => import("@shikijs/langs/typescript"),
+          javascript: () => import("@shikijs/langs/javascript"),
+          tsx: () => import("@shikijs/langs/tsx"),
+          jsx: () => import("@shikijs/langs/jsx"),
+          bash: () => import("@shikijs/langs/shellscript"),
+          json: () => import("@shikijs/langs/json"),
+          css: () => import("@shikijs/langs/css"),
+          html: () => import("@shikijs/langs/html"),
+          rust: () => import("@shikijs/langs/rust"),
+        },
+        themes: {
+          "github-dark": () => import("@shikijs/themes/github-dark"),
+          "github-light": () => import("@shikijs/themes/github-light"),
+        },
+        engine: () => createJavaScriptRegexEngine(),
+      });
       shikiHighlighterPromise = createHighlighter({
         themes: ["github-dark", "github-light"],
         langs: [
