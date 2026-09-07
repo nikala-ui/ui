@@ -24,6 +24,9 @@ const RESOLVED_TREE_ID = "\0" + VIRTUAL_TREE_ID;
 const VIRTUAL_ROUTES_ID = "virtual:nikala-docs-routes";
 const RESOLVED_ROUTES_ID = "\0" + VIRTUAL_ROUTES_ID;
 
+const VIRTUAL_COMPONENTS_ID = "virtual:nikala-docs-components";
+const RESOLVED_COMPONENTS_ID = "\0" + VIRTUAL_COMPONENTS_ID;
+
 const VIRTUAL_THEME_ID = "virtual:nikala-docs-theme";
 const RESOLVED_THEME_ID = "\0" + VIRTUAL_THEME_ID;
 
@@ -61,6 +64,86 @@ function getTailwindSourceDirectives(rootDir: string, docsDir: string): string {
   return sources
     .map((src) => `@source "${src}";`)
     .join("\n");
+}
+
+function getComponentSourceDir(rootDir: string): string {
+  const localSource = path.resolve(rootDir, "src/components/ui");
+  if (fs.existsSync(localSource)) return localSource;
+
+  const bundledSource = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../vendor/core-src/registry/components/ui");
+  if (fs.existsSync(bundledSource)) return bundledSource;
+
+  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../core/src/registry/components/ui");
+}
+
+function collectComponentExports(directory: string): Array<{ name: string; file: string }> {
+  if (!fs.existsSync(directory)) return [];
+
+  return fs.readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /\.(?:tsx?|jsx?)$/.test(entry.name) && !/^index\./.test(entry.name))
+    .flatMap((entry) => {
+      const file = path.join(directory, entry.name);
+      const source = fs.readFileSync(file, "utf8");
+      const names = new Set<string>();
+      for (const match of source.matchAll(/export\s+(?:const|function|class)\s+([A-Z][A-Za-z0-9_$]*)/g)) {
+        names.add(match[1]);
+      }
+      for (const match of source.matchAll(/export\s*\{([^}]+)\}/g)) {
+        for (const name of match[1].split(",")) {
+          const exported = name.trim().split(/\s+as\s+/).at(-1);
+          if (exported && /^[A-Z][A-Za-z0-9_$]*$/.test(exported)) names.add(exported);
+        }
+      }
+      return [...names].sort().map((name) => ({ name, file }));
+    })
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function collectSourceFiles(directory: string): string[] {
+  if (!fs.existsSync(directory)) return [];
+
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const file = path.join(directory, entry.name);
+    if (entry.isDirectory()) return collectSourceFiles(file);
+    return entry.isFile() && /\.(?:tsx?|jsx?)$/.test(entry.name) ? [file] : [];
+  });
+}
+
+function resolveComponentFile(directory: string, importPath: string): string | undefined {
+  const base = path.join(directory, importPath);
+  const candidates = [
+    base,
+    ...[".ts", ".tsx", ".js", ".jsx"].map((extension) => base + extension),
+    ...["index.ts", "index.tsx", "index.js", "index.jsx"].map((entry) => path.join(base, entry)),
+  ];
+  return candidates.find((file) => fs.existsSync(file));
+}
+
+function collectStaticComponentFiles(componentDir: string, themeDirs: string[]): Set<string> {
+  const staticFiles = new Set<string>();
+  const pending = themeDirs.flatMap((directory) => collectSourceFiles(directory));
+
+  while (pending.length) {
+    const file = pending.pop()!;
+    if (!fs.existsSync(file)) continue;
+    const source = fs.readFileSync(file, "utf8");
+    for (const match of source.matchAll(/from\s+["']@\/components\/ui\/([^"']+)["']/g)) {
+      const importedFile = resolveComponentFile(componentDir, match[1]);
+      if (importedFile && !staticFiles.has(importedFile)) {
+        staticFiles.add(importedFile);
+        pending.push(importedFile);
+      }
+    }
+    for (const match of source.matchAll(/from\s+["'](\.\.?\/[^"']+)["']/g)) {
+      const importedFile = resolveComponentFile(path.dirname(file), match[1]);
+      if (importedFile && importedFile.startsWith(`${path.resolve(componentDir)}${path.sep}`) && !staticFiles.has(importedFile)) {
+        staticFiles.add(importedFile);
+        pending.push(importedFile);
+      }
+    }
+  }
+
+  return staticFiles;
 }
 
 export function nikalaDocsPlugin(options: NikalaDocsPluginOptions = {}): Plugin {
@@ -110,6 +193,7 @@ export function nikalaDocsPlugin(options: NikalaDocsPluginOptions = {}): Plugin 
       if (id === VIRTUAL_CONFIG_ID) return RESOLVED_CONFIG_ID;
       if (id === VIRTUAL_TREE_ID) return RESOLVED_TREE_ID;
       if (id === VIRTUAL_ROUTES_ID) return RESOLVED_ROUTES_ID;
+      if (id === VIRTUAL_COMPONENTS_ID) return RESOLVED_COMPONENTS_ID;
       if (id === VIRTUAL_THEME_ID) return RESOLVED_THEME_ID;
       return null;
     },
@@ -173,6 +257,48 @@ export const routes = {
 ${routeEntries.join(",\n")}
 };
 export default routes;
+`;
+      }
+
+      if (id === RESOLVED_COMPONENTS_ID) {
+        const componentDir = getComponentSourceDir(rootDir);
+        const themeDirs = [
+          path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../themes/default"),
+          path.resolve(rootDir, "src/themes/default"),
+        ];
+        if (resolvedConfig.theme?.path) {
+          const configuredTheme = path.resolve(rootDir, resolvedConfig.theme.path);
+          themeDirs.push(fs.existsSync(configuredTheme) && fs.statSync(configuredTheme).isDirectory()
+            ? configuredTheme
+            : path.dirname(configuredTheme));
+        }
+        const staticFiles = collectStaticComponentFiles(componentDir, themeDirs);
+        const modules = new Map<string, { index: number; file: string; isStatic: boolean }>();
+        const exports = collectComponentExports(getComponentSourceDir(rootDir));
+        for (const { file } of exports) {
+          const existing = modules.get(file);
+          if (!existing) modules.set(file, { index: modules.size, file, isStatic: staticFiles.has(file) });
+        }
+        const moduleEntries = [...modules.values()];
+        const imports = moduleEntries.map(({ index, file }) =>
+          modules.get(file)!.isStatic
+            ? `import * as componentModule${index} from ${JSON.stringify(file)};`
+            : `const componentModule${index} = () => import(${JSON.stringify(file)});`
+        );
+        const entries = exports.map(({ name, file }) => {
+          const module = modules.get(file)!;
+          return module.isStatic
+            ? `  ${JSON.stringify(name)}: componentModule${module.index}[${JSON.stringify(name)}]`
+            : `  ${JSON.stringify(name)}: lazy(() => componentModule${module.index}().then((module) => ({ default: module[${JSON.stringify(name)}] })))`;
+        });
+
+        return `
+import { lazy } from "solid-js";
+${imports.join("\n")}
+const components = {
+${entries.join(",\n")}
+};
+export default components;
 `;
       }
 
@@ -249,6 +375,8 @@ export default routes;
         .filter((file) => fs.existsSync(file));
       if (configFiles.length) server.watcher.add(configFiles);
       if (docsDir && fs.existsSync(docsDir)) server.watcher.add(docsDir);
+      const componentsDir = getComponentSourceDir(rootDir);
+      if (componentsDir && fs.existsSync(componentsDir)) server.watcher.add(componentsDir);
       const configuredCss = resolvedConfig.css
         ? path.resolve(rootDir, resolvedConfig.css)
         : undefined;
@@ -256,11 +384,16 @@ export default routes;
 
       let reloadTimer: ReturnType<typeof setTimeout> | undefined;
 
-      const invalidateVirtualModules = (includeConfig = false) => {
+      const invalidateVirtualModules = (includeConfig = false, includeComponents = false) => {
         const modTree = server.moduleGraph.getModuleById(RESOLVED_TREE_ID);
         const modRoutes = server.moduleGraph.getModuleById(RESOLVED_ROUTES_ID);
         if (modTree) server.moduleGraph.invalidateModule(modTree);
         if (modRoutes) server.moduleGraph.invalidateModule(modRoutes);
+
+        if (includeComponents) {
+          const modComponents = server.moduleGraph.getModuleById(RESOLVED_COMPONENTS_ID);
+          if (modComponents) server.moduleGraph.invalidateModule(modComponents);
+        }
 
         if (includeConfig) {
           const modConfig = server.moduleGraph.getModuleById(RESOLVED_CONFIG_ID);
@@ -280,18 +413,30 @@ export default routes;
       server.watcher.on("add", (file) => {
         if (/\.(md|mdx)$/.test(file)) {
           invalidateVirtualModules();
+          return;
+        }
+        if (componentsDir && path.resolve(file).startsWith(`${path.resolve(componentsDir)}${path.sep}`)) {
+          invalidateVirtualModules(false, true);
         }
       });
 
       server.watcher.on("unlink", (file) => {
         if (/\.(md|mdx)$/.test(file)) {
           invalidateVirtualModules();
+          return;
+        }
+        if (componentsDir && path.resolve(file).startsWith(`${path.resolve(componentsDir)}${path.sep}`)) {
+          invalidateVirtualModules(false, true);
         }
       });
 
       server.watcher.on("change", async (file) => {
         if (/\.(md|mdx)$/.test(file)) {
           invalidateVirtualModules();
+          return;
+        }
+        if (componentsDir && path.resolve(file).startsWith(`${path.resolve(componentsDir)}${path.sep}`)) {
+          invalidateVirtualModules(false, true);
           return;
         }
         if (CONFIG_FILENAMES.has(path.basename(file))) {

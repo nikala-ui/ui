@@ -2,9 +2,11 @@ import { splitProps, type JSX } from "solid-js";
 import { Plus } from "lucide-solid";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-// Resolved by the consuming docs project to its local Nikala UI sources.
-// @ts-ignore - the package build does not own the consumer's @ alias.
-import * as Core from "@/components/ui";
+// Resolved by the docs plugin to lazy wrappers around the consumer's local
+// component sources. The source modules load only when an MDX component is
+// actually rendered.
+// @ts-ignore
+import Core from "virtual:nikala-docs-components";
 
 const cn = (...values: unknown[]) => twMerge(clsx(values));
 type HtmlProps<T extends HTMLElement> = JSX.HTMLAttributes<T>;

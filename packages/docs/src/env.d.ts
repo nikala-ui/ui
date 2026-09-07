@@ -19,3 +19,8 @@ declare module "virtual:nikala-docs-routes" {
   const def: Record<string, () => Promise<any>>;
   export default def;
 }
+
+declare module "virtual:nikala-docs-components" {
+  const components: Record<string, any>;
+  export default components;
+}

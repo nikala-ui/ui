@@ -14,6 +14,11 @@ const coreRoot = path.join(workspaceRoot, "packages/core");
 const hooksRoot = path.join(workspaceRoot, "packages/hooks");
 console.log(pc.cyan("📦 Building @nikala-ui/docs..."));
 
+// TypeScript does not remove files left behind by renames. Clean generated
+// output first so stale casing variants (for example App.d.ts/app.d.ts) cannot
+// leak into the published package or the monorepo TypeScript project.
+fs.removeSync(distDir);
+
 // 1. Run TypeScript compiler
 try {
   execSync("bunx tsc -p tsconfig.build.json", {
