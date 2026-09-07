@@ -7,7 +7,9 @@
     "clsx",
     "tailwind-merge",
     "lucide-solid",
-    "shiki"
+    "shiki",
+    "@shikijs/langs",
+    "@shikijs/themes"
   ],
   "registryDependencies": [
     "button",

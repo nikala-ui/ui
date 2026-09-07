@@ -433,7 +433,7 @@ export const COMPONENT_METADATA: Record<string, ComponentMeta> = {
   "code-block": {
     title: "Code Block",
     description: "A code block container with filename header, language indicator, and interactive copy to clipboard button.",
-    dependencies: ["clsx", "tailwind-merge", "lucide-solid", "shiki"],
+    dependencies: ["clsx", "tailwind-merge", "lucide-solid", "shiki", "@shikijs/langs", "@shikijs/themes"],
     registryDependencies: ["button", "badge", "tooltip", "tabs", "create-clipboard"],
   },
   "package-manager-tabs": {
