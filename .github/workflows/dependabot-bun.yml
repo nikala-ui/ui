@@ -36,10 +36,10 @@ jobs:
 
       - name: Commit and Push Updated Lockfile
         run: |
-          if git status --porcelain | grep -q 'bun.lock'; then
+          if git status --porcelain -- bun.lock | grep -q .; then
             git config --global user.name "github-actions[bot]"
             git config --global user.email "github-actions[bot]@users.noreply.github.com"
-            git add bun.lock bun.lockb
+            git add bun.lock
             git commit -m "chore(deps): update bun.lock [skip ci]"
             git push
             echo "Successfully synced bun.lock to PR branch."
