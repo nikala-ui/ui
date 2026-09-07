@@ -1,5 +1,5 @@
 // packages/docs/src/themes/default/sidebar.tsx
-import { createSignal, onCleanup, onMount, Show, splitProps, type Component } from "solid-js";
+import { createSignal, For, onCleanup, onMount, Show, splitProps, type Component } from "solid-js";
 import { Sidebar } from "@/components/ui/sidebar";
 import { SidebarHeader } from "@/components/ui/sidebar";
 import { SidebarContent } from "@/components/ui/sidebar";
@@ -16,7 +16,7 @@ import type { DocsSidebarProps } from "../types.js";
 import { SidebarTree } from "./navigation/sidebar-tree.jsx";
 
 export const DocsSidebar: Component<DocsSidebarProps> = (props) => {
-  const [local, rest] = splitProps(props, ["tree", "currentUrl", "title", "logo", "headerSubtitle", "footerText", "showHeader", "showFooter", "class"]);
+  const [local, rest] = splitProps(props, ["tree", "nav", "currentUrl", "title", "logo", "headerSubtitle", "footerText", "showHeader", "showFooter", "class"]);
   const brandText = () => local.logo?.text || local.title || "Nikala Docs";
   const sidebar = useSidebar();
   const [sidebarElement, setSidebarElement] = createSignal<HTMLDivElement>();
@@ -56,7 +56,7 @@ export const DocsSidebar: Component<DocsSidebarProps> = (props) => {
           collapsible={sidebar.isMobile() ? "none" : "icon"}
           class={cn(
             "sticky top-0 z-30 h-screen shrink-0 rounded-none border-y-0 border-l-0 border-r border-border bg-card shadow-sm",
-            "max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-[min(17rem,calc(100vw-1rem))] max-md:shadow-xl",
+            "overflow-hidden max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:w-[min(17rem,calc(100vw-1rem))] max-md:shadow-xl",
             local.class
           )}
           {...rest}
@@ -81,7 +81,24 @@ export const DocsSidebar: Component<DocsSidebarProps> = (props) => {
         </SidebarHeader>
       </Show>
 
-      <SidebarContent class="h-full overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
+      <SidebarContent class="h-full overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <Show when={local.nav?.length}>
+          <nav aria-label="Primary navigation" class="border-b border-border/60 px-2 py-2 md:hidden">
+            <For each={local.nav}>
+              {(item) => (
+                <a
+                  href={item.href}
+                  target={item.external ? "_blank" : undefined}
+                  rel={item.external ? "noreferrer" : undefined}
+                  onClick={() => sidebar.setOpenMobile(false)}
+                  class={cn(sidebarMenuButtonVariants({ variant: "default", size: "default" }), "w-full justify-start text-sm font-normal")}
+                >
+                  {item.title}
+                </a>
+              )}
+            </For>
+          </nav>
+        </Show>
         <SidebarTree tree={local.tree} currentUrl={local.currentUrl} />
       </SidebarContent>
 

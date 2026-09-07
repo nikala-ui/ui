@@ -13,6 +13,7 @@ export interface DocsNavbarProps {
 
 export interface DocsSidebarProps {
   tree: SidebarItem[];
+  nav?: DocsConfig["nav"];
   currentUrl?: string;
   title?: string;
   logo?: DocsConfig["logo"];

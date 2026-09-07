@@ -52,7 +52,7 @@ export const DocsNavbar: Component<DocsNavbarProps> = (props) => {
             </NavbarBrand>
           </Show>
           <Show when={local.config.nav?.length}>
-            <NavbarContent justify="start" class="min-w-0 flex-1 gap-1 overflow-hidden px-1">
+            <NavbarContent justify="start" class="hidden min-w-0 flex-1 gap-1 overflow-hidden px-1 md:flex">
               <For each={local.config.nav}>
                 {(item) => (
                   <NavbarItem>

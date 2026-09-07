@@ -11,6 +11,7 @@ import { DocsPager } from "./content/pager.jsx";
 import { DocsTableOfContents } from "./content/table-of-contents.jsx";
 import { DocsMobileTableOfContents } from "./navigation/mobile-table-of-contents.jsx";
 import { DocsSearchDialog } from "./overlays/search-dialog.jsx";
+import { cn } from "@/lib/cn";
 import type { DocsLayoutProps } from "../types.js";
 
 export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
@@ -47,6 +48,7 @@ export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
   const sidebar = () => (
     <DocsSidebar
       tree={local.tree}
+      nav={local.config.nav}
       currentUrl={currentUrl()}
       title={local.config.title}
       logo={local.config.logo}
@@ -58,8 +60,8 @@ export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
   );
 
   const content = () => (
-    <SidebarInset class={local.class} {...rest}>
-      <Container as="main" size="2xl" class="flex-1 flex gap-4 sm:gap-8 py-6 sm:py-8">
+    <SidebarInset class={cn("min-w-0 max-w-full overflow-x-clip", local.class)} {...rest}>
+      <Container as="main" size="2xl" class="min-w-0 max-w-full flex-1 flex gap-4 sm:gap-8 py-6 sm:py-8">
         <Container as="article" size="xl" class="flex-1 min-w-0 px-0 sm:px-4 w-full">
           <Show when={local.breadcrumbs && local.breadcrumbs.length > 0}>
             <DocsBreadcrumbs items={local.breadcrumbs!} class="mb-6" />
@@ -88,8 +90,8 @@ export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
   );
 
   const landingContent = () => (
-    <SidebarInset class={local.class} {...rest}>
-      <Container as="main" size="2xl" class="flex-1 py-8 sm:py-12 lg:py-16">
+    <SidebarInset class={cn("min-w-0 max-w-full overflow-x-clip", local.class)} {...rest}>
+      <Container as="main" size="2xl" class="min-w-0 max-w-full flex-1 py-8 sm:py-12 lg:py-16">
         <Container as="article" size="xl" class="mx-auto min-w-0 px-0 sm:px-4">
           <Show when={local.config.home?.showBreadcrumbs === true}>
             <Show when={local.breadcrumbs && local.breadcrumbs.length > 0}>
@@ -113,7 +115,7 @@ export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
       <Show when={landingPage()} fallback={<Show when={sidebarLayout()} fallback={
         <div class="flex min-h-screen min-w-0 flex-1 flex-col">
           <DocsNavbar config={local.config} showBrand={true} onOpenSearch={() => setSearchOpen(true)} />
-          <div class="flex min-h-0 flex-1 items-start">{sidebar()}{content()}</div>
+          <div class="flex min-h-0 min-w-0 max-w-full flex-1 items-start">{sidebar()}{content()}</div>
         </div>
       }>
         {sidebar()}
@@ -132,7 +134,7 @@ export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
             />
           </Show>
           <Show when={showLandingSidebar()} fallback={landingContent()}>
-            <div class="flex min-h-0 flex-1 items-start">{sidebar()}{landingContent()}</div>
+            <div class="flex min-h-0 min-w-0 max-w-full flex-1 items-start">{sidebar()}{landingContent()}</div>
           </Show>
         </div>
       </Show>
