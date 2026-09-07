@@ -1,6 +1,6 @@
 // packages/docs/src/client/entry.tsx
 import { render } from "solid-js/web";
-import { App } from "./App";
+import { App } from "./app";
 import { defaultMdxComponents } from "../components/mdx-components.jsx";
 import "./style.css";
 

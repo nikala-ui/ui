@@ -164,15 +164,11 @@ export default { pages, tree };
 
       if (id === RESOLVED_ROUTES_ID) {
         cachedPages = await scanContent(docsDir);
-        const imports = cachedPages.map((page, index) =>
-          `import * as pageModule${index} from ${JSON.stringify(page.filePath)};`
-        );
-        const routeEntries = cachedPages.map((page, index) =>
-          `  ${JSON.stringify(page.url)}: () => Promise.resolve(pageModule${index})`
+        const routeEntries = cachedPages.map((page) =>
+          `  ${JSON.stringify(page.url)}: () => import(${JSON.stringify(page.filePath)})`
         );
 
         return `
-${imports.join("\n")}
 export const routes = {
 ${routeEntries.join(",\n")}
 };

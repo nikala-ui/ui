@@ -69,11 +69,18 @@ export function createDocsRouter(options: DocsRouterOptions): DocsRouter {
   });
 
   const [loadedPageModule, setLoadedPageModule] = createSignal<PageModule | null | undefined>(options.initialPageModule);
+  let initialModulePending = Boolean(options.initialPageModule);
+  let loadRequest = 0;
   createEffect(() => {
     if (typeof window === "undefined") return;
     const url = currentPage()?.url;
     const initialPath = normalizePath(options.initialPath || "/");
-    if (options.initialPageModule && initialPath === normalizePath(pathname())) return;
+    if (initialModulePending && initialPath === normalizePath(pathname())) {
+      initialModulePending = false;
+      return;
+    }
+    initialModulePending = false;
+    const requestId = ++loadRequest;
     if (!url) {
       setLoadedPageModule(undefined);
       return;
@@ -85,8 +92,11 @@ export function createDocsRouter(options: DocsRouterOptions): DocsRouter {
     }
     setLoadedPageModule(null);
     void loader()
-      .then(setLoadedPageModule)
+      .then((pageModule) => {
+        if (requestId === loadRequest) setLoadedPageModule(pageModule);
+      })
       .catch((error) => {
+        if (requestId !== loadRequest) return;
         console.error(`[nikala-docs] Failed to load page: ${url}`, error);
         setLoadedPageModule(undefined);
       });

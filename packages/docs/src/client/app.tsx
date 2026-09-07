@@ -1,7 +1,7 @@
 import { createEffect, type Component } from "solid-js";
 import { defaultMdxComponents } from "../components/mdx-components.jsx";
-import { DocsLayoutShell } from "./components/DocsLayoutShell.jsx";
-import { DocsPageContent } from "./components/DocsPageContent.jsx";
+import { DocsLayoutShell } from "./components/docs-layout-shell.jsx";
+import { DocsPageContent } from "./components/docs-page-content.jsx";
 import type { AppProps } from "./app-types.js";
 import { createPageNavigation } from "./navigation/page-navigation.js";
 import { createDocsRouter } from "./routing/use-docs-router.js";

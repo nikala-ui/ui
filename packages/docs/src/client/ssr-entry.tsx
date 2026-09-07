@@ -1,5 +1,5 @@
 import { generateHydrationScript, renderToString } from "solid-js/web";
-import { App } from "./App";
+import { App } from "./app";
 import { defaultMdxComponents } from "../components/mdx-components.jsx";
 
 // @ts-ignore
