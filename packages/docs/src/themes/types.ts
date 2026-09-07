@@ -8,6 +8,7 @@ export interface DocsNavbarProps {
   onOpenSearch?: () => void;
   showBrand?: boolean;
   showSidebarTrigger?: boolean;
+  mobileSidebarTrigger?: boolean;
   class?: string;
 }
 

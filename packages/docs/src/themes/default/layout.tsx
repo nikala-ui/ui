@@ -45,7 +45,7 @@ export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
   const sidebarHeader = () => local.config.navigation?.sidebar?.header !== false;
   const sidebarFooter = () => local.config.navigation?.sidebar?.footer !== false;
 
-  const sidebar = () => (
+  const sidebar = (className?: string) => (
     <DocsSidebar
       tree={local.tree}
       nav={local.config.nav}
@@ -56,6 +56,7 @@ export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
       footerText={local.config.navigation?.sidebar?.footerText}
       showHeader={sidebarHeader()}
       showFooter={sidebarFooter()}
+      class={className}
     />
   );
 
@@ -130,10 +131,18 @@ export const DocsLayout: ParentComponent<DocsLayoutProps> = (props) => {
               config={local.config}
               showBrand={true}
               showSidebarTrigger={showLandingSidebar()}
+              mobileSidebarTrigger={landingPage()}
               onOpenSearch={() => setSearchOpen(true)}
             />
           </Show>
-          <Show when={showLandingSidebar()} fallback={landingContent()}>
+          <Show when={showLandingSidebar()} fallback={
+            <>
+              <Show when={landingPage()}>
+                {sidebar("md:hidden")}
+              </Show>
+              {landingContent()}
+            </>
+          }>
             <div class="flex min-h-0 min-w-0 max-w-full flex-1 items-start">{sidebar()}{landingContent()}</div>
           </Show>
         </div>

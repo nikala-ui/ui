@@ -16,7 +16,7 @@ import { Search } from "lucide-solid";
 import type { DocsNavbarProps } from "../types.js";
 
 export const DocsNavbar: Component<DocsNavbarProps> = (props) => {
-  const [local, rest] = splitProps(props, ["config", "onOpenSearch", "showBrand", "showSidebarTrigger", "class"]);
+  const [local, rest] = splitProps(props, ["config", "onOpenSearch", "showBrand", "showSidebarTrigger", "mobileSidebarTrigger", "class"]);
 
   const title = () => local.config.title || "Nikala Docs";
   const logoText = () => local.config.logo?.text || title();
@@ -33,8 +33,11 @@ export const DocsNavbar: Component<DocsNavbarProps> = (props) => {
     >
       <NavbarContainer class="h-14 md:h-14 px-4 sm:px-6">
         <NavbarContent justify="start" class="gap-3">
-          <Show when={local.showSidebarTrigger !== false}>
-            <SidebarTrigger aria-label="Toggle documentation sidebar" />
+          <Show when={local.showSidebarTrigger !== false || local.mobileSidebarTrigger === true}>
+            <SidebarTrigger
+              aria-label="Toggle documentation sidebar"
+              class={local.mobileSidebarTrigger ? "md:hidden" : undefined}
+            />
           </Show>
           <Show when={local.showBrand !== false}>
             <NavbarBrand href={logoHref()} class="text-base font-bold tracking-tight">
