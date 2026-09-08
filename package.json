@@ -10,10 +10,9 @@
     "build:registry": "cd packages/core && bun run build:registry",
     "build:cli": "cd packages/cli && bun run build",
     "build:mcp": "cd packages/mcp && bun run build",
-    "build:docs": "cd packages/docs && bun run build",
     "build:web": "cd apps/web && bun run build",
-    "build": "bun run build:registry && bun run build:cli && bun run build:mcp && bun run build:docs && bun run build:web",
-    "typecheck": "(cd packages/core && bunx tsc --noEmit) && (cd packages/hooks && bunx tsc --noEmit) && (cd packages/cli && bunx tsc --noEmit) && (cd packages/mcp && bunx tsc --noEmit) && (cd packages/docs && bunx tsc --noEmit) && (cd apps/web && bunx tsc --noEmit)",
+    "build": "bun run build:registry && bun run build:cli && bun run build:mcp && bun run build:web",
+    "typecheck": "(cd packages/core && bunx tsc --noEmit) && (cd packages/hooks && bunx tsc --noEmit) && (cd packages/cli && bunx tsc --noEmit) && (cd packages/mcp && bunx tsc --noEmit) && (cd apps/web && bunx tsc --noEmit)",
     "bump": "bun run scripts/bump.ts",
     "changelog": "bun run scripts/generate-changelog.ts",
     "index:algolia": "bun run .github/scripts/index-algolia.ts"
