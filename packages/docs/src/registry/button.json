@@ -1,0 +1,21 @@
+{
+  "name": "button",
+  "title": "Button",
+  "description": "An interactive button component with variant and size options.",
+  "type": "registry:ui",
+  "dependencies": [
+    "clsx",
+    "tailwind-merge",
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "spinner"
+  ],
+  "files": [
+    {
+      "path": "ui/button.tsx",
+      "content": "import { Show, splitProps, type Component, type JSX } from \"solid-js\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/cn\";\nimport { Spinner } from \"@/components/ui/spinner\";\n\n/**\n * Class variance authority configuration for button styling variants and sizes.\n */\nexport const buttonVariants = cva(\n  \"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 cursor-pointer\",\n  {\n    variants: {\n      variant: {\n        default:\n          \"bg-primary text-primary-foreground shadow hover:bg-primary/90 border border-primary/50\",\n        destructive:\n          \"bg-red-600 text-zinc-50 shadow-sm hover:bg-red-600/90 dark:bg-red-900 dark:text-zinc-50 dark:hover:bg-red-900/90\",\n        outline:\n          \"border border-input bg-background hover:bg-accent hover:text-accent-foreground\",\n        secondary:\n          \"bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border\",\n        ghost:\n          \"hover:bg-accent hover:text-accent-foreground\",\n        link: \"text-primary underline-offset-4 hover:underline\",\n        success: \"*:bg-green-600 text-zinc-50 shadow-sm hover:bg-green-600/90 dark:bg-green-900 dark:text-zinc-50 dark:hover:bg-green-900/90\",\n        warning: \"*:bg-yellow-600 text-zinc-50 shadow-sm hover:bg-yellow-600/90 dark:bg-yellow-900 dark:text-zinc-50 dark:hover:bg-yellow-900/90\",\n        info: \"*:bg-blue-600 text-zinc-50 shadow-sm hover:bg-blue-600/90 dark:bg-blue-900 dark:text-zinc-50 dark:hover:bg-blue-900/90\",\n      },\n      size: {\n        xs: \"h-6 rounded-md px-2 text-xs\",\n        default: \"h-9 px-4 py-2\",\n        sm: \"h-8 rounded-md px-3 text-xs\",\n        lg: \"h-10 rounded-md px-8\",\n        icon: \"h-9 w-9\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n      size: \"default\",\n    },\n  }\n);\n\n/**\n * Props interface for the Button component extending standard HTML button attributes.\n */\nexport interface ButtonProps\n  extends JSX.ButtonHTMLAttributes<HTMLButtonElement>,\n    VariantProps<typeof buttonVariants> {\n  /** Shows a loading spinner and prevents repeated clicks while active. */\n  loading?: boolean;\n  class?: string;\n}\n\n/**\n * Nikala UI Button component built for SolidJS with Tailwind CSS v4 styling.\n */\nexport const Button: Component<ButtonProps> = (props) => {\n  // Use splitProps to preserve SolidJS reactivity for destructured props\n  const [local, rest] = splitProps(props, [\n    \"variant\",\n    \"size\",\n    \"class\",\n    \"children\",\n    \"loading\",\n    \"disabled\",\n  ]);\n\n  return (\n    <button\n      class={cn(buttonVariants({ variant: local.variant, size: local.size }), local.class)}\n      disabled={local.disabled || local.loading}\n      aria-busy={local.loading ? \"true\" : undefined}\n      {...rest}\n    >\n      <Show when={local.loading}>\n        <Spinner size=\"sm\" class=\"text-current\" />\n      </Show>\n      {local.children}\n    </button>\n  );\n};\n",
+      "type": "registry:ui"
+    }
+  ]
+}

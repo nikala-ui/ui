@@ -8,10 +8,10 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "paths": {
-      "@/components/ui/*": ["../core/src/registry/components/ui/*"],
-      "@/hooks/*": ["../hooks/src/*"],
-      "@/lib/*": ["../core/src/lib/*"],
-      "@/providers/*": ["../core/src/registry/providers/*"],
+      "@/components/ui/*": ["./src/components/ui/*"],
+      "@/hooks/*": ["./src/hooks/*"],
+      "@/lib/*": ["./src/lib/*"],
+      "@/providers/*": ["./src/providers/*"],
       "@/*": ["./src/*"]
     },
     "strict": true,

@@ -1,0 +1,21 @@
+{
+  "name": "pager",
+  "title": "Pager",
+  "description": "Previous and next article navigation links with card previews for documentation and blog layouts.",
+  "type": "registry:ui",
+  "dependencies": [
+    "clsx",
+    "tailwind-merge",
+    "lucide-solid"
+  ],
+  "registryDependencies": [
+    "card"
+  ],
+  "files": [
+    {
+      "path": "ui/pager.tsx",
+      "content": "import { splitProps, Show, children, type Component, type JSX } from \"solid-js\";\nimport { ChevronLeft, ChevronRight } from \"lucide-solid\";\nimport {\n  Card,\n  CardHeader,\n  CardTitle,\n  CardDescription,\n} from \"@/components/ui/card\";\nimport { cn } from \"@/lib/cn\";\n\nexport interface PagerItem {\n  title: string;\n  href: string;\n}\n\nexport interface PagerLinkProps extends JSX.AnchorHTMLAttributes<HTMLAnchorElement> {\n  title: string;\n  href: string;\n  type: \"prev\" | \"next\";\n  class?: string;\n}\n\n/**\n * Individual Next or Previous page navigation card.\n */\nexport const PagerLink: Component<PagerLinkProps> = (props) => {\n  const [local, rest] = splitProps(props, [\"title\", \"href\", \"type\", \"class\"]);\n\n  const isNext = () => local.type === \"next\";\n\n  return (\n    <a\n      href={local.href}\n      class={cn(\n        \"group block rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring\",\n        isNext() && \"sm:col-start-2\",\n        local.class\n      )}\n      {...rest}\n    >\n      <Card class=\"h-full transition-all group-hover:bg-accent/40 group-hover:shadow-2xs\">\n        <CardHeader class={cn(\"p-4 flex flex-col space-y-1.5\", isNext() && \"items-end text-right\")}>\n          <CardDescription class=\"flex items-center gap-1 text-xs font-medium text-muted-foreground\">\n            <Show when={!isNext()}>\n              <ChevronLeft class=\"size-3.5 transition-transform group-hover:-translate-x-0.5\" />\n              <span>Previous</span>\n            </Show>\n            <Show when={isNext()}>\n              <span>Next</span>\n              <ChevronRight class=\"size-3.5 transition-transform group-hover:translate-x-0.5\" />\n            </Show>\n          </CardDescription>\n          <CardTitle class=\"text-sm font-semibold tracking-tight group-hover:text-primary transition-colors line-clamp-1\">\n            {local.title}\n          </CardTitle>\n        </CardHeader>\n      </Card>\n    </a>\n  );\n};\n\nexport interface PagerProps extends JSX.HTMLAttributes<HTMLDivElement> {\n  /** Previous documentation page item */\n  prev?: PagerItem | null;\n  /** Next documentation page item */\n  next?: PagerItem | null;\n  class?: string;\n}\n\n/**\n * Documentation Next / Previous article navigation block composed of Nikala UI Card primitives.\n */\nexport const Pager: Component<PagerProps> = (props) => {\n  const [local, rest] = splitProps(props, [\"prev\", \"next\", \"class\", \"children\"]);\n  const resolved = children(() => local.children);\n\n  return (\n    <div\n      class={cn(\"grid grid-cols-1 gap-4 sm:grid-cols-2 mt-10 pt-6 border-t border-border\", local.class)}\n      {...rest}\n    >\n      <Show\n        when={resolved()}\n        fallback={\n          <>\n            <Show\n              when={local.prev}\n              fallback={<span class=\"hidden sm:block\" />}\n            >\n              <PagerLink type=\"prev\" title={local.prev!.title} href={local.prev!.href} />\n            </Show>\n            <Show when={local.next}>\n              <PagerLink type=\"next\" title={local.next!.title} href={local.next!.href} />\n            </Show>\n          </>\n        }\n      >\n        {resolved()}\n      </Show>\n    </div>\n  );\n};\n",
+      "type": "registry:ui"
+    }
+  ]
+}

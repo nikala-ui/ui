@@ -1,0 +1,13 @@
+{
+  "name": "create-controllable-signal",
+  "title": "createControllableSignal",
+  "description": "SolidJS reactive primitive supporting both controlled and uncontrolled state management",
+  "type": "registry:hook",
+  "files": [
+    {
+      "path": "hooks/create-controllable-signal.ts",
+      "content": "import { createSignal, type Accessor } from \"solid-js\";\n\nexport interface CreateControllableSignalOptions<T> {\n  /** Controlled value accessor or raw value */\n  value?: Accessor<T | undefined> | T;\n  /** Uncontrolled default initial value */\n  defaultValue?: T;\n  /** Callback fired whenever the value changes */\n  onChange?: (value: T) => void;\n}\n\n/**\n * SolidJS reactive primitive for managing state supporting both controlled and uncontrolled modes.\n *\n * @param options Configuration options for value, defaultValue, and onChange callback.\n * @returns A tuple containing [valueAccessor, setValueFunction].\n */\nexport function createControllableSignal<T>(\n  options: CreateControllableSignalOptions<T>\n): [Accessor<T | undefined>, (nextValue: T | ((prev: T | undefined) => T)) => void] {\n  const [internalValue, setInternalValue] = createSignal<T | undefined>(\n    options.defaultValue\n  );\n\n  const getValue = (): T | undefined => {\n    if (typeof options.value === \"function\") {\n      return (options.value as Accessor<T | undefined>)();\n    }\n    return options.value;\n  };\n\n  const isControlled = () => getValue() !== undefined;\n\n  const value = () => {\n    const controlledVal = getValue();\n    return controlledVal !== undefined ? controlledVal : internalValue();\n  };\n\n  const setValue = (nextValue: T | ((prev: T | undefined) => T)) => {\n    const current = value();\n    const resolvedNext =\n      typeof nextValue === \"function\"\n        ? (nextValue as (prev: T | undefined) => T)(current)\n        : nextValue;\n\n    if (!isControlled()) {\n      setInternalValue(resolvedNext as any);\n    }\n\n    if (typeof options.onChange === \"function\") {\n      options.onChange(resolvedNext);\n    }\n  };\n\n  return [value, setValue];\n}",
+      "type": "registry:hook"
+    }
+  ]
+}

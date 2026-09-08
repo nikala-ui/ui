@@ -10,9 +10,11 @@ const srcClientDir = path.resolve(rootDir, "src/client");
 const srcClientPublicDir = path.join(srcClientDir, "public");
 const distClientDir = path.resolve(distDir, "client");
 const cliDistFile = path.resolve(distDir, "cli/index.js");
-const workspaceRoot = path.resolve(rootDir, "../..");
-const coreRoot = path.join(workspaceRoot, "packages/core");
-const hooksRoot = path.join(workspaceRoot, "packages/hooks");
+const srcRegistryDir = path.resolve(rootDir, "src/registry");
+const srcComponentsDir = path.resolve(rootDir, "src/components");
+const srcHooksDir = path.resolve(rootDir, "src/hooks");
+const srcProvidersDir = path.resolve(rootDir, "src/providers");
+const srcLibDir = path.resolve(rootDir, "src/lib");
 console.log(pc.cyan("📦 Building @nikala-ui/docs..."));
 
 // TypeScript does not remove files left behind by renames. Clean generated
@@ -66,20 +68,20 @@ try {
   process.exit(1);
 }
 
-// Bundle registry and source snapshots so published docs projects do not
-// require @nikala-ui/core or @nikala-ui/hooks at runtime.
+// Bundle the Docs package's owned registry and source snapshots. The package
+// must remain usable after extraction from this monorepo.
 try {
-  const registrySource = path.join(coreRoot, "registry");
-  const coreSource = path.join(coreRoot, "src");
-  const hooksSource = path.join(hooksRoot, "src");
-  if (!fs.existsSync(registrySource) || !fs.existsSync(coreSource) || !fs.existsSync(hooksSource)) {
-    throw new Error("Nikala UI registry sources are missing from the workspace");
+  if (!fs.existsSync(srcRegistryDir) || !fs.existsSync(srcComponentsDir) || !fs.existsSync(srcHooksDir) || !fs.existsSync(srcProvidersDir)) {
+    throw new Error("Nikala Docs local registry or source snapshots are missing");
   }
   await fs.remove(path.join(distDir, "registry"));
   await fs.remove(path.join(distDir, "vendor"));
-  await fs.copy(registrySource, path.join(distDir, "registry"));
-  await fs.copy(coreSource, path.join(distDir, "vendor/core-src"));
-  await fs.copy(hooksSource, path.join(distDir, "vendor/hooks-src"));
+  const docsSourceDir = path.join(distDir, "vendor/docs-src");
+  await fs.copy(srcRegistryDir, path.join(distDir, "registry"));
+  await fs.copy(srcComponentsDir, path.join(docsSourceDir, "components"));
+  await fs.copy(srcHooksDir, path.join(docsSourceDir, "hooks"));
+  await fs.copy(srcProvidersDir, path.join(docsSourceDir, "providers"));
+  if (fs.existsSync(srcLibDir)) await fs.copy(srcLibDir, path.join(docsSourceDir, "lib"));
   console.log(`  ${pc.green("✓")} Bundled registry and local source snapshots`);
 } catch (err: any) {
   console.error(pc.red(`✗ Failed to bundle registry sources: ${err.message}`));

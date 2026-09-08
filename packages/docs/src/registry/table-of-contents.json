@@ -1,0 +1,23 @@
+{
+  "name": "table-of-contents",
+  "title": "Table of Contents",
+  "description": "An accessible heading navigation tree with ScrollSpy tracking and smooth scrolling, composed of ScrollArea and List.",
+  "type": "registry:ui",
+  "dependencies": [
+    "clsx",
+    "tailwind-merge",
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "scroll-area",
+    "list",
+    "create-scroll-position"
+  ],
+  "files": [
+    {
+      "path": "ui/table-of-contents.tsx",
+      "content": "// src/components/ui/table-of-contents.tsx\nimport {\n  splitProps,\n  createSignal,\n  createEffect,\n  onMount,\n  onCleanup,\n  For,\n  Show,\n  type Component,\n  type JSX,\n} from \"solid-js\";\nimport { ScrollArea } from \"@/components/ui/scroll-area\";\nimport { List, ListHeader, ListItem } from \"@/components/ui/list\";\nimport { cn } from \"@/lib/cn\";\nimport { createScrollPosition } from \"@/hooks/create-scroll-position\";\n\nexport interface TocItem {\n  id: string;\n  text: string;\n  depth: number;\n}\n\nexport interface TableOfContentsProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, \"title\"> {\n  items: TocItem[];\n  title?: string | false;\n  activeId?: string;\n  onItemClick?: (id: string) => void;\n  class?: string;\n}\n\n/**\n * Nikala UI TableOfContents Component.\n * Pure composition of ScrollArea, ListHeader, List, and ListItem with active ScrollSpy tracking.\n */\nexport const TableOfContents: Component<TableOfContentsProps> = (props) => {\n  const [local, rest] = splitProps(props, [\n    \"items\",\n    \"title\",\n    \"activeId\",\n    \"onItemClick\",\n    \"class\",\n  ]);\n\n  const [activeId, setActiveId] = createSignal<string>(local.activeId || \"\");\n  const scrollPosition = createScrollPosition();\n\n  onMount(() => {\n    if (typeof window === \"undefined\" || typeof document === \"undefined\") return;\n\n    const headings = (local.items || [])\n      .map((item) => document.getElementById(item.id))\n      .filter((element): element is HTMLElement => Boolean(element));\n\n    const updateActiveHeading = () => {\n      if (headings.length === 0) return;\n\n      const atPageBottom = scrollPosition.isAtBottom();\n      if (atPageBottom) {\n        setActiveId(headings[headings.length - 1].id);\n        return;\n      }\n\n      const heading = [...headings]\n        .reverse()\n        .find((element) => element.getBoundingClientRect().top <= 120);\n\n      setActiveId(heading?.id || headings[0].id);\n    };\n\n    createEffect(() => {\n      scrollPosition.y();\n      scrollPosition.isAtBottom();\n      updateActiveHeading();\n    });\n\n    window.addEventListener(\"resize\", updateActiveHeading);\n    onCleanup(() => window.removeEventListener(\"resize\", updateActiveHeading));\n  });\n\n  const handleClick = (e: MouseEvent, id: string) => {\n    if (typeof document !== \"undefined\") {\n      const el = document.getElementById(id);\n      if (el) {\n        e.preventDefault();\n        el.scrollIntoView({ behavior: \"smooth\" });\n        setActiveId(id);\n        if (typeof window !== \"undefined\") {\n          window.history.pushState(null, \"\", `#${id}`);\n        }\n      }\n    }\n    local.onItemClick?.(id);\n  };\n\n  return (\n    <ScrollArea class={cn(\"h-full py-2\", local.class)} {...rest}>\n      <Show when={local.title !== false}>\n        <ListHeader\n          title={typeof local.title === \"string\" ? local.title : \"On this page\"}\n          class=\"px-3 pb-1\"\n        />\n      </Show>\n\n      <List class=\"gap-0.5 p-1\">\n        <For each={local.items}>\n          {(item) => (\n            <ListItem\n              title={item.text}\n              href={`#${item.id}`}\n              active={activeId() === item.id}\n              size=\"sm\"\n              hoverVariant=\"muted\"\n              class={cn(\n                \"text-xs transition-colors py-1 h-auto min-h-0\",\n                item.depth === 3 && \"pl-5 text-muted-foreground/80\",\n                item.depth > 3 && \"pl-7 text-muted-foreground/60\",\n                activeId() === item.id\n                  ? \"text-primary font-medium bg-primary/10\"\n                  : \"text-muted-foreground hover:text-foreground\"\n              )}\n              onClick={(e: MouseEvent) => handleClick(e, item.id)}\n            />\n          )}\n        </For>\n      </List>\n    </ScrollArea>\n  );\n};\n\nexport const Toc = TableOfContents;\n",
+      "type": "registry:ui"
+    }
+  ]
+}

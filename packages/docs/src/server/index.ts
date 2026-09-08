@@ -41,30 +41,14 @@ function getSolidJsDir(): string {
   }
 }
 
-function getDocsPackageRoot(): string {
-  return path.resolve(__dirname, "../..");
-}
-
-function getCoreSrcDir(): string {
-  try {
-    const bundled = path.resolve(__dirname, "../vendor/core-src");
-    if (fs.existsSync(bundled)) return bundled;
-    const entry = fileURLToPath(import.meta.resolve("@nikala-ui/core"));
-    return path.dirname(entry);
-  } catch {
-    return path.resolve(__dirname, "../../../core/src");
-  }
-}
-
-function getHooksSrcDir(): string {
-  try {
-    const bundled = path.resolve(__dirname, "../vendor/hooks-src");
-    if (fs.existsSync(bundled)) return bundled;
-    const entry = fileURLToPath(import.meta.resolve("@nikala-ui/hooks"));
-    return path.dirname(entry);
-  } catch {
-    return path.resolve(__dirname, "../../../hooks/src");
-  }
+function getDocsSourceDir(): string {
+  const candidates = [
+    path.resolve(__dirname, "../vendor/docs-src"),
+    path.resolve(__dirname, "../../src"),
+  ];
+  const source = candidates.find((candidate) => fs.existsSync(candidate));
+  if (source) return source;
+  throw new Error("Nikala Docs local source snapshot is missing");
 }
 
 function createLocalBarrelPlugin(
@@ -142,17 +126,16 @@ function getSharedConfig(options: DocsServerOptions, isDev = false, isSSR = fals
   const clientDir = getClientDir();
   const publicDir = path.join(root, "public");
   const solidJsDir = getSolidJsDir();
-  const coreSrc = getCoreSrcDir();
-  const hooksSrc = getHooksSrcDir();
+  const docsSrc = getDocsSourceDir();
   const localSrc = path.join(root, "src");
   const localComponents = path.join(localSrc, "components", "ui");
   const localHooks = path.join(localSrc, "hooks");
   const localLib = path.join(localSrc, "lib");
   const localProviders = path.join(localSrc, "providers");
-  const componentsSrc = fs.existsSync(localComponents) ? localComponents : path.join(coreSrc, "registry/components/ui");
-  const hooksSource = fs.existsSync(localHooks) ? localHooks : hooksSrc;
-  const libSource = fs.existsSync(localLib) ? localLib : path.join(coreSrc, "lib");
-  const providersSource = fs.existsSync(localProviders) ? localProviders : path.join(coreSrc, "registry/providers");
+  const componentsSrc = fs.existsSync(localComponents) ? localComponents : path.join(docsSrc, "components/ui");
+  const hooksSource = fs.existsSync(localHooks) ? localHooks : path.join(docsSrc, "hooks");
+  const libSource = fs.existsSync(localLib) ? localLib : path.join(docsSrc, "lib");
+  const providersSource = fs.existsSync(localProviders) ? localProviders : path.join(docsSrc, "providers");
 
   const aliases: any[] = [];
   if (solidJsDir) {
@@ -168,20 +151,12 @@ function getSharedConfig(options: DocsServerOptions, isDev = false, isSSR = fals
     );
   }
 
-  if (coreSrc) {
-    aliases.push(
-      { find: "@/lib", replacement: libSource },
-      { find: "@/providers", replacement: providersSource },
-      { find: /^@\/components\/ui\/(.*)$/, replacement: path.join(componentsSrc, "$1") }
-    );
-  }
-
-  if (hooksSrc) {
-    aliases.push(
-      { find: /^@\/hooks\/(.*)$/, replacement: path.join(hooksSource, "$1") },
-      { find: "@nikala-ui/hooks", replacement: path.join(hooksSource, "index.ts") },
-    );
-  }
+  aliases.push(
+    { find: "@/lib", replacement: libSource },
+    { find: "@/providers", replacement: providersSource },
+    { find: /^@\/components\/ui\/(.*)$/, replacement: path.join(componentsSrc, "$1") },
+    { find: /^@\/hooks\/(.*)$/, replacement: path.join(hooksSource, "$1") },
+  );
 
   return {
     root: clientDir,
@@ -195,7 +170,7 @@ function getSharedConfig(options: DocsServerOptions, isDev = false, isSSR = fals
       exclude: ["shiki"],
     },
     plugins: [
-      createLocalHooksFallbackPlugin(localHooks, hooksSrc),
+      createLocalHooksFallbackPlugin(localHooks, path.join(docsSrc, "hooks")),
       createLocalBarrelPlugin(componentsSrc, hooksSource, libSource, providersSource),
       nikalaDocsPlugin({
         docsDir: options.docsDir ? path.resolve(root, options.docsDir) : undefined,
@@ -457,10 +432,7 @@ export async function createDocsServer(options: DocsServerOptions = {}): Promise
   const root = options.root ? path.resolve(process.cwd(), options.root) : process.cwd();
   const localSrc = path.join(root, "src");
   const clientDir = getClientDir();
-  const coreSrc = getCoreSrcDir();
-  const hooksSrc = getHooksSrcDir();
   const solidJsDir = getSolidJsDir();
-  const workspaceRoot = path.resolve(getDocsPackageRoot(), "../..");
   const shared = getSharedConfig(options, true);
 
   const server = await createServer({
@@ -475,11 +447,7 @@ export async function createDocsServer(options: DocsServerOptions = {}): Promise
           root,
           clientDir,
           path.resolve(clientDir, "../.."),
-          path.resolve(coreSrc, "../.."),
-          path.resolve(hooksSrc, "../.."),
           ...(fs.existsSync(localSrc) ? [localSrc, path.resolve(localSrc, "..") ] : []),
-          workspaceRoot,
-          path.join(workspaceRoot, "node_modules"),
           ...(solidJsDir ? [solidJsDir, path.resolve(solidJsDir, ".."), path.resolve(solidJsDir, "../..")] : []),
         ],
       },

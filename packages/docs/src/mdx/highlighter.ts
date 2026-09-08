@@ -75,16 +75,12 @@ export function configureDocsHighlighter(config: ShikiConfig): void {
 }
 
 export async function getDocsHighlighter(config?: ShikiConfig): Promise<Highlighter> {
-  const currentConfig = config || activeShikiConfig;
-
   if (!highlighterPromise) {
-    const lightTheme = (currentConfig?.themes?.light as BundledTheme) || DEFAULT_LIGHT_THEME;
-    const darkTheme = (currentConfig?.themes?.dark as BundledTheme) || DEFAULT_DARK_THEME;
-    const initialLangs = (currentConfig?.langs as BundledLanguage[]) || DEFAULT_BASE_LANGS;
-
     highlighterPromise = createDocsHighlighter({
-      themes: [lightTheme, darkTheme],
-      langs: initialLangs,
+      // Keep the core highlighter small. Project-specific themes and
+      // languages are loaded by ensureTheme/ensureLanguage on demand.
+      themes: [DEFAULT_LIGHT_THEME, DEFAULT_DARK_THEME],
+      langs: DEFAULT_BASE_LANGS,
     }) as Promise<Highlighter>;
   }
 
@@ -136,6 +132,17 @@ export async function ensureTheme(highlighter: Highlighter, themeName: string): 
     } catch (err) {
       console.warn(`[nikala-docs] Failed to dynamically load Shiki theme "${themeName}":`, err);
     }
+  }
+
+  // Shiki publishes themes as individually addressable package exports. Use
+  // a runtime subpath import so configured themes remain supported without
+  // eagerly bundling the complete theme catalog.
+  try {
+    const module = await import(`@shikijs/themes/${themeName}`);
+    await highlighter.loadTheme(module.default || module);
+    return themeName;
+  } catch (err) {
+    console.warn(`[nikala-docs] Failed to dynamically load Shiki theme "${themeName}":`, err);
   }
 
   return DEFAULT_DARK_THEME;

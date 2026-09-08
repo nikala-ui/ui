@@ -1,0 +1,18 @@
+{
+  "name": "badge",
+  "title": "Badge",
+  "description": "A small badge component for status indicators and tags.",
+  "type": "registry:ui",
+  "dependencies": [
+    "clsx",
+    "tailwind-merge",
+    "class-variance-authority"
+  ],
+  "files": [
+    {
+      "path": "ui/badge.tsx",
+      "content": "import { splitProps, type Component, type JSX } from \"solid-js\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/cn\";\n\n/**\n * Class variance authority configuration for badge styling variants.\n */\nexport const badgeVariants = cva(\n  \"inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2\",\n  {\n    variants: {\n      variant: {\n        default:\n          \"border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80\",\n        secondary:\n          \"border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80\",\n        destructive:\n          \"border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80\",\n        outline:\n          \"text-foreground border-border\",\n        success:\n          \"border-transparent bg-green-600 text-zinc-50 shadow-sm hover:bg-green-600/90 dark:bg-green-900 dark:text-zinc-50 dark:hover:bg-green-900/90\",\n        warning:\n          \"border-transparent bg-yellow-600 text-zinc-50 shadow-sm hover:bg-yellow-600/90 dark:bg-yellow-900 dark:text-zinc-50 dark:hover:bg-yellow-900/90\",\n        info:\n          \"border-transparent bg-blue-600 text-zinc-50 shadow-sm hover:bg-blue-600/90 dark:bg-blue-900 dark:text-zinc-50 dark:hover:bg-blue-900/90\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n    },\n  }\n);\n\n/**\n * Props interface for the Badge component extending standard HTML div attributes.\n */\nexport interface BadgeProps\n  extends JSX.HTMLAttributes<HTMLDivElement>,\n    VariantProps<typeof badgeVariants> {\n  class?: string;\n}\n\n/**\n * Nikala UI Badge component built for SolidJS with Tailwind CSS v4 styling.\n */\nexport const Badge: Component<BadgeProps> = (props) => {\n  // Use splitProps to preserve SolidJS reactivity\n  const [local, rest] = splitProps(props, [\"variant\", \"class\", \"children\"]);\n\n  return (\n    <div class={cn(badgeVariants({ variant: local.variant }), local.class)} {...rest}>\n      {local.children}\n    </div>\n  );\n};",
+      "type": "registry:ui"
+    }
+  ]
+}

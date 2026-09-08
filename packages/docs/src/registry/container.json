@@ -1,0 +1,18 @@
+{
+  "name": "container",
+  "title": "Container",
+  "description": "A responsive layout container constraining maximum width with semantic padding tokens.",
+  "type": "registry:ui",
+  "dependencies": [
+    "clsx",
+    "tailwind-merge",
+    "class-variance-authority"
+  ],
+  "files": [
+    {
+      "path": "ui/container.tsx",
+      "content": "import { splitProps, type JSX, type ValidComponent } from \"solid-js\";\nimport { Dynamic } from \"solid-js/web\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"@/lib/cn\";\n\nexport const containerVariants = cva(\"w-full mx-auto px-4 sm:px-6 lg:px-8\", {\n  variants: {\n    size: {\n      sm: \"max-w-screen-sm\",\n      md: \"max-w-screen-md\",\n      lg: \"max-w-screen-lg\",\n      xl: \"max-w-screen-xl\",\n      \"2xl\": \"max-w-screen-2xl\",\n      full: \"max-w-full\",\n    },\n  },\n  defaultVariants: {\n    size: \"2xl\",\n  },\n});\n\nexport interface ContainerProps<T extends ValidComponent = \"div\">\n  extends JSX.HTMLAttributes<HTMLDivElement>,\n    VariantProps<typeof containerVariants> {\n  /** Underlying HTML element or Solid component tag (defaults to \"div\") */\n  as?: T;\n  class?: string;\n}\n\n/**\n * Responsive container primitive constraining max-width with semantic padding tokens.\n */\nexport const Container = <T extends ValidComponent = \"div\">(props: ContainerProps<T>) => {\n  const [local, rest] = splitProps(props as ContainerProps, [\"as\", \"size\", \"class\", \"children\"]);\n\n  return (\n    <Dynamic\n      component={local.as || \"div\"}\n      class={cn(containerVariants({ size: local.size }), local.class)}\n      {...rest}\n    >\n      {local.children}\n    </Dynamic>\n  );\n};\n",
+      "type": "registry:ui"
+    }
+  ]
+}

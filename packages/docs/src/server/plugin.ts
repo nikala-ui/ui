@@ -61,8 +61,8 @@ function escapeHtmlAttribute(value: string): string {
 
 function getTailwindSourceDirectives(rootDir: string, docsDir: string): string {
   const sources: string[] = [];
-  const bundledCoreSource = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../vendor/core-src");
-  if (fs.existsSync(bundledCoreSource)) sources.push(bundledCoreSource);
+  const bundledDocsSource = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../vendor/docs-src");
+  if (fs.existsSync(bundledDocsSource)) sources.push(bundledDocsSource);
   sources.push(path.resolve(rootDir, "src"));
 
   const themesDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../themes");
@@ -78,10 +78,15 @@ function getComponentSourceDir(rootDir: string): string {
   const localSource = path.resolve(rootDir, "src/components/ui");
   if (fs.existsSync(localSource)) return localSource;
 
-  const bundledSource = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../vendor/core-src/registry/components/ui");
-  if (fs.existsSync(bundledSource)) return bundledSource;
-
-  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../core/src/registry/components/ui");
+  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
+  const candidates = [
+    path.resolve(moduleDir, "../vendor/docs-src/components/ui"),
+    path.resolve(moduleDir, "../../src/components/ui"),
+    path.resolve(moduleDir, "../components/ui"),
+  ];
+  const source = candidates.find((candidate) => fs.existsSync(candidate));
+  if (source) return source;
+  throw new Error("Nikala Docs local component sources are missing");
 }
 
 function collectComponentExports(directory: string): Array<{ name: string; file: string }> {

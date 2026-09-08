@@ -1,0 +1,18 @@
+{
+  "name": "collapsible",
+  "title": "Collapsible",
+  "description": "An interactive component that expands and collapses content panels with smooth height animations, built on Kobalte primitives.",
+  "type": "registry:ui",
+  "dependencies": [
+    "clsx",
+    "tailwind-merge",
+    "@kobalte/core"
+  ],
+  "files": [
+    {
+      "path": "ui/collapsible.tsx",
+      "content": "import { splitProps, type JSX, type ValidComponent } from \"solid-js\";\nimport * as CollapsiblePrimitive from \"@kobalte/core/collapsible\";\nimport type { PolymorphicProps } from \"@kobalte/core/polymorphic\";\nimport { cn } from \"@/lib/cn\";\n\nexport type CollapsibleRootProps<T extends ValidComponent = \"div\"> =\n  CollapsiblePrimitive.CollapsibleRootProps<T> & {\n    class?: string;\n  };\n\n/**\n * Root Collapsible component built on Kobalte primitives.\n */\nexport const Collapsible = <T extends ValidComponent = \"div\">(\n  props: PolymorphicProps<T, CollapsibleRootProps<T>>\n) => {\n  const [local, rest] = splitProps(props as CollapsibleRootProps, [\"class\"]);\n  return (\n    <CollapsiblePrimitive.Root\n      class={cn(\"w-full\", local.class)}\n      {...(rest as any)}\n    />\n  );\n};\n\nexport type CollapsibleTriggerProps<T extends ValidComponent = \"button\"> =\n  CollapsiblePrimitive.CollapsibleTriggerProps<T> & {\n    class?: string;\n    children?: JSX.Element;\n  };\n\n/**\n * Trigger element that toggles the Collapsible open/closed state.\n */\nexport const CollapsibleTrigger = <T extends ValidComponent = \"button\">(\n  props: PolymorphicProps<T, CollapsibleTriggerProps<T>>\n) => {\n  const [local, rest] = splitProps(props as CollapsibleTriggerProps, [\"class\", \"children\"]);\n  return (\n    <CollapsiblePrimitive.Trigger\n      class={cn(\"flex w-full items-center justify-between cursor-pointer\", local.class)}\n      {...rest}\n    >\n      {local.children}\n    </CollapsiblePrimitive.Trigger>\n  );\n};\n\nexport type CollapsibleContentProps<T extends ValidComponent = \"div\"> =\n  CollapsiblePrimitive.CollapsibleContentProps<T> & {\n    class?: string;\n    children?: JSX.Element;\n  };\n\n/**\n * Collapsible content panel revealed when opened.\n */\nexport const CollapsibleContent = <T extends ValidComponent = \"div\">(\n  props: PolymorphicProps<T, CollapsibleContentProps<T>>\n) => {\n  const [local, rest] = splitProps(props as CollapsibleContentProps, [\"class\", \"children\"]);\n  return (\n    <CollapsiblePrimitive.Content\n      class={cn(\n        \"overflow-hidden transition-all data-expanded:animate-collapsible-down data-closed:animate-collapsible-up\",\n        local.class\n      )}\n      {...rest}\n    >\n      {local.children}\n    </CollapsiblePrimitive.Content>\n  );\n};\n",
+      "type": "registry:ui"
+    }
+  ]
+}

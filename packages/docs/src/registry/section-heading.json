@@ -1,0 +1,21 @@
+{
+  "name": "section-heading",
+  "title": "Section Heading",
+  "description": "A reusable heading block with title, optional badge, and description. Supports page and section variants.",
+  "type": "registry:ui",
+  "dependencies": [
+    "clsx",
+    "tailwind-merge",
+    "class-variance-authority"
+  ],
+  "registryDependencies": [
+    "badge"
+  ],
+  "files": [
+    {
+      "path": "ui/section-heading.tsx",
+      "content": "import {\n  splitProps,\n  Show,\n  type JSX,\n  type Component,\n} from \"solid-js\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { Badge } from \"@/components/ui/badge\";\nimport { cn } from \"@/lib/cn\";\n\nconst headingVariants = cva(\"tracking-tight\", {\n  variants: {\n    variant: {\n      page: \"text-3xl sm:text-4xl font-bold\",\n      section: \"text-2xl font-semibold border-b border-border/50 pb-2\",\n      compact: \"text-base font-semibold\",\n    },\n  },\n  defaultVariants: {\n    variant: \"section\",\n  },\n});\n\nconst descriptionVariants = cva(\"text-muted-foreground leading-relaxed\", {\n  variants: {\n    variant: {\n      page: \"text-lg\",\n      section: \"text-sm\",\n      compact: \"text-xs\",\n    },\n  },\n  defaultVariants: {\n    variant: \"section\",\n  },\n});\n\nexport interface SectionHeadingProps\n  extends Omit<JSX.HTMLAttributes<HTMLDivElement>, \"title\">,\n    VariantProps<typeof headingVariants> {\n  /** Heading text content */\n  title: string;\n  /** Optional badge label displayed next to the title */\n  badge?: string;\n  /** Badge style variant */\n  badgeVariant?: \"default\" | \"secondary\" | \"outline\" | \"destructive\";\n  /** Optional subtitle or explanatory note below the title */\n  description?: string;\n  class?: string;\n}\n\n/**\n * Reusable heading block with title, optional badge, and description.\n * Supports \"page\" (h1), \"section\" (h2 with divider), and \"compact\" (h3) variants.\n */\nexport const SectionHeading: Component<SectionHeadingProps> = (props) => {\n  const [local, rest] = splitProps(props, [\n    \"title\",\n    \"badge\",\n    \"badgeVariant\",\n    \"description\",\n    \"variant\",\n    \"class\",\n  ]);\n\n  const v = () => local.variant || \"section\";\n\n  return (\n    <div class={cn(\"space-y-2\", local.class)} {...rest}>\n      <div class={cn(\"flex items-center gap-2\", v() === \"section\" && \"w-full\")}>\n        <Show when={v() === \"page\"}>\n          <h1 class={headingVariants({ variant: v() })}>\n            {local.title}\n          </h1>\n        </Show>\n\n        <Show when={v() === \"section\"}>\n          <h2 class={cn(\"w-full\", headingVariants({ variant: v() }))}>\n            {local.title}\n          </h2>\n        </Show>\n\n        <Show when={v() === \"compact\"}>\n          <h3 class={headingVariants({ variant: v() })}>\n            {local.title}\n          </h3>\n        </Show>\n\n        <Show when={local.badge}>\n          <Badge\n            variant={local.badgeVariant || \"outline\"}\n            class={cn(\n              \"select-none\",\n              v() === \"page\" ? \"text-xs\" : \"font-mono text-[10px] py-0 px-1.5 font-medium\"\n            )}\n          >\n            {local.badge}\n          </Badge>\n        </Show>\n      </div>\n\n      <Show when={local.description}>\n        <p class={descriptionVariants({ variant: v() })}>\n          {local.description}\n        </p>\n      </Show>\n    </div>\n  );\n};\n",
+      "type": "registry:ui"
+    }
+  ]
+}
