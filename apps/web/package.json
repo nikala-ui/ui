@@ -40,6 +40,8 @@
     "clsx": "^2.1.1",
     "lucide-solid": "^1.27.0",
     "nitro": "^3.0.260610-beta",
+    "@shikijs/langs": "^4.4.3",
+    "@shikijs/themes": "^4.4.3",
     "shiki": "^4.4.3",
     "solid-js": "^1.9.5",
     "tailwind-merge": "^3.6.0",
