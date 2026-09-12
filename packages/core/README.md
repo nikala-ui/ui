@@ -112,7 +112,6 @@ The registry must be regenerated before publishing changes to the core package. 
 
 - `@nikala-ui/cli` installs and updates registry items in a consuming project.
 - `@nikala-ui/hooks` publishes the standalone reactive primitives package.
-- `@nikala-ui/docs` bundles registry and source snapshots to initialize independent documentation projects without requiring `@nikala-ui/core` at runtime.
 
 ## License
 

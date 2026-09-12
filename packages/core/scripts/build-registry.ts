@@ -27,60 +27,6 @@ async function getFilesRecursively(dir: string, ext: string): Promise<string[]> 
   return files.sort((a, b) => a.localeCompare(b));
 }
 
-/**
- * Keep the docs MDX component registry in sync with the public core barrel.
- * Docs pages can then use exported Nikala components without maintaining a
- * second hand-written import/mapping list.
- */
-async function syncDocsMdxComponents(cwd: string) {
-  const coreIndexPath = path.join(cwd, "src", "index.ts");
-  const mdxComponentsPath = path.join(
-    cwd,
-    "..",
-    "docs",
-    "src",
-    "components",
-    "mdx-components.tsx"
-  );
-
-  if (!(await fs.pathExists(coreIndexPath)) || !(await fs.pathExists(mdxComponentsPath))) {
-    return;
-  }
-
-  const coreIndex = await fs.readFile(coreIndexPath, "utf-8");
-  const componentFiles = [...coreIndex.matchAll(
-    /export \* from "\.\/registry\/components\/ui\/([^"\/]+)\.jsx";/g
-  )].map((match) => match[1]);
-  const names = new Set<string>();
-
-  for (const fileName of componentFiles) {
-    const sourcePath = path.join(cwd, "src", "registry", "components", "ui", `${fileName}.tsx`);
-    if (!(await fs.pathExists(sourcePath))) continue;
-
-    const source = await fs.readFile(sourcePath, "utf-8");
-    for (const match of source.matchAll(/^export\s+(?:const|function)\s+([A-Za-z_$][\w$]*)/gm)) {
-      const name = match[1];
-      if (/^[A-Z]/.test(name) && !name.endsWith("Variants")) names.add(name);
-    }
-  }
-
-  const generatedNames = [...names].sort((a, b) => a.localeCompare(b));
-  const importBlock = `import {\n${generatedNames.map((name) => `  ${name},`).join("\n")}\n} from "@nikala-ui/core";`;
-  const mappingBlock = `  // BEGIN AUTO-GENERATED NIKALA COMPONENTS\n  Plus,\n${generatedNames.map((name) => `  ${name},`).join("\n")}\n  // END AUTO-GENERATED NIKALA COMPONENTS`;
-
-  let mdxComponents = await fs.readFile(mdxComponentsPath, "utf-8");
-  mdxComponents = mdxComponents.replace(
-    /import \{\n[\s\S]*?\n\} from "@nikala-ui\/core";/,
-    importBlock
-  );
-  mdxComponents = mdxComponents.replace(
-    /  \/\/ BEGIN AUTO-GENERATED NIKALA COMPONENTS\n[\s\S]*?  \/\/ END AUTO-GENERATED NIKALA COMPONENTS/,
-    mappingBlock
-  );
-  await fs.writeFile(mdxComponentsPath, mdxComponents);
-  console.log(pc.green(`  ✓ Synced ${path.relative(cwd, mdxComponentsPath)}`));
-}
-
 function toPascalCase(value: string) {
   return value
     .split("-")
@@ -533,13 +479,10 @@ async function buildRegistry() {
     console.log(pc.green("  ✓ Synced hooks to apps/web/src/hooks"));
   }
 
-  // 7. Keep the docs MDX component map synchronized with core exports
-  await syncDocsMdxComponents(cwd);
-
-  // 8. Create missing component documentation pages without overwriting authored docs
+  // 7. Create missing component documentation pages without overwriting authored docs
   await generateDocsBoilerplates(cwd, indexList);
 
-  // 9. Create separate missing hook documentation pages without overwriting authored docs
+  // 8. Create separate missing hook documentation pages without overwriting authored docs
   await generateHookDocsBoilerplates(cwd, indexList);
 
   console.log(pc.cyan("\n✅ Registry build complete!"));

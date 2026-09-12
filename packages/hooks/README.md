@@ -146,7 +146,6 @@ Primitives that access `window`, `document`, browser events, or browser-only API
 
 - `@nikala-ui/cli` copies selected hook sources into an application.
 - `@nikala-ui/core` contains the internal registry manifests and source metadata.
-- `@nikala-ui/docs` bundles source snapshots so generated documentation projects can own their local hooks.
 
 ## Package development
 
