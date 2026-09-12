@@ -25,6 +25,7 @@ export interface TableOfContentsProps extends Omit<JSX.HTMLAttributes<HTMLDivEle
   items: TocItem[];
   title?: string | false;
   activeId?: string;
+  onActiveChange?: (id: string) => void;
   onItemClick?: (id: string) => void;
   class?: string;
 }
@@ -37,12 +38,17 @@ export const TableOfContents: Component<TableOfContentsProps> = (props) => {
   const [local, rest] = splitProps(props, [
     "items",
     "title",
-    "activeId",
-    "onItemClick",
+  "activeId",
+  "onActiveChange",
+  "onItemClick",
     "class",
   ]);
 
   const [activeId, setActiveId] = createSignal<string>(local.activeId || "");
+  const setCurrentActiveId = (id: string) => {
+    setActiveId(id);
+    local.onActiveChange?.(id);
+  };
   const scrollPosition = createScrollPosition();
 
   onMount(() => {
@@ -57,7 +63,7 @@ export const TableOfContents: Component<TableOfContentsProps> = (props) => {
 
       const atPageBottom = scrollPosition.isAtBottom();
       if (atPageBottom) {
-        setActiveId(headings[headings.length - 1].id);
+        setCurrentActiveId(headings[headings.length - 1].id);
         return;
       }
 
@@ -65,7 +71,7 @@ export const TableOfContents: Component<TableOfContentsProps> = (props) => {
         .reverse()
         .find((element) => element.getBoundingClientRect().top <= 120);
 
-      setActiveId(heading?.id || headings[0].id);
+      setCurrentActiveId(heading?.id || headings[0].id);
     };
 
     createEffect(() => {
@@ -84,7 +90,7 @@ export const TableOfContents: Component<TableOfContentsProps> = (props) => {
       if (el) {
         e.preventDefault();
         el.scrollIntoView({ behavior: "smooth" });
-        setActiveId(id);
+        setCurrentActiveId(id);
         if (typeof window !== "undefined") {
           window.history.pushState(null, "", `#${id}`);
         }
